@@ -1,13 +1,10 @@
-
-Destaques da pasta
-Web app code (HTML, CSS, JS) facilitates loading Excel/CSV data for daily schedule review with real-time tracking.
-
 document.addEventListener('DOMContentLoaded', () => {
     // --- Elementos do DOM ---
     const fileInput = document.getElementById('file-input');
     const linesInput = document.getElementById('lines-input');
     const linesFilter = document.getElementById('lines-filter');
-    const selectedLinesDisplay = document.getElementById('selected-lines-display');
+    // VARIÁVEL ATUALIZADA AQUI
+    const selectedFiltersDisplay = document.getElementById('selected-filters-display');
     const dataTableBody = document.getElementById('data-table-body');
     const loadingMessage = document.getElementById('loading-message');
     const errorMessage = document.getElementById('error-message');
@@ -15,17 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const clearDataButton = document.getElementById('clear-data-button');
     const filterSection = document.getElementById('filter-section');
 
+    const tableFilter = document.getElementById('table-filter');
+    const startTimeFilter = document.getElementById('start-time-filter');
+    const endTimeFilter = document.getElementById('end-time-filter');
+
     let allData = [];
     let updateInterval;
 
-    // --- FUNÇÕES GLOBAIS DE APOIO ---
-    // Esta função agora está fora do escopo principal para ser acessível
+    // ... (checkTime e outras funções permanecem iguais) ...
     function checkTime(itemId, scheduledTimeStr) {
         const realTimeInput = document.getElementById(`real-time-${itemId}`);
         const veiculoInput = document.getElementById(`veiculo-${itemId}`);
         const lostMessageSpan = document.getElementById(`lost-msg-${itemId}`);
         
-        if (!lostMessageSpan) return; // Sai se o elemento não existir
+        if (!lostMessageSpan) return;
 
         lostMessageSpan.style.display = 'none';
         lostMessageSpan.className = 'lost-entry';
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!veiculoInput.value || veiculoInput.value.length !== 5) {
             alert('Por favor, insira um número de veículo válido com 5 dígitos antes de preencher o horário.');
             realTimeInput.value = '';
-            saveUserInputs(itemId, veiculoInput.value, ''); // Salva a limpeza
+            saveUserInputs(itemId, veiculoInput.value, '');
             return;
         }
 
@@ -53,8 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lostMessageSpan.style.display = 'inline';
         }
     }
-
-    // --- LÓGICA DO TEMA E INICIALIZAÇÃO ---
+    
     function applyTheme() {
         const currentTheme = localStorage.getItem('theme');
         document.body.classList.toggle('dark-mode', currentTheme === 'dark');
@@ -72,8 +71,18 @@ document.addEventListener('DOMContentLoaded', () => {
             Array.from(linesFilter.options).forEach(option => {
                 option.selected = savedLines.includes(option.value);
             });
+
+            const savedTables = JSON.parse(localStorage.getItem('gistSelectedTables')) || [];
+            Array.from(tableFilter.options).forEach(option => {
+                option.selected = savedTables.includes(option.value);
+            });
+
+            const savedTimeFilters = JSON.parse(localStorage.getItem('gistTimeFilters')) || { start: '', end: '' };
+            startTimeFilter.value = savedTimeFilters.start;
+            endTimeFilter.value = savedTimeFilters.end;
             
-            updateSelectedLinesDisplay();
+            // CHAMADA À FUNÇÃO ATUALIZADA
+            updateSelectedFiltersDisplay();
             renderTable(allData);
         } else {
             filterSection.style.display = 'none';
@@ -82,7 +91,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeApp();
 
-    // --- EVENT LISTENERS ---
+    // ... (Listeners de themeToggleButton, clearDataButton, fileInput permanecem iguais) ...
+
     themeToggleButton.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
@@ -93,15 +103,36 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.removeItem('gistFileData');
             localStorage.removeItem('gistUserInputs');
             localStorage.removeItem('gistSelectedLines');
+            localStorage.removeItem('gistSelectedTables'); 
+            localStorage.removeItem('gistTimeFilters'); 
             window.location.reload();
         }
     });
 
     fileInput.addEventListener('change', handleFile);
+    
     linesFilter.addEventListener('change', () => {
-        updateSelectedLinesDisplay();
+        // CHAMADA À FUNÇÃO ATUALIZADA
+        updateSelectedFiltersDisplay();
         renderTable(allData);
-        saveSelectedLines();
+        saveFilterState();
+    });
+
+    tableFilter.addEventListener('change', () => {
+        // CHAMADA À FUNÇÃO ADICIONADA AQUI
+        updateSelectedFiltersDisplay();
+        renderTable(allData);
+        saveFilterState();
+    });
+
+    // ... (outros listeners permanecem iguais) ...
+    startTimeFilter.addEventListener('input', () => {
+        renderTable(allData);
+        saveFilterState();
+    });
+    endTimeFilter.addEventListener('input', () => {
+        renderTable(allData);
+        saveFilterState();
     });
 
     linesInput.addEventListener('keydown', (e) => {
@@ -121,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- FUNÇÕES PRINCIPAIS ---
+    // ... (handleFile e populateFilters permanecem iguais) ...
     function handleFile(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -158,6 +189,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 localStorage.setItem('gistFileData', JSON.stringify(allData));
                 localStorage.removeItem('gistUserInputs');
                 localStorage.removeItem('gistSelectedLines');
+                localStorage.removeItem('gistSelectedTables');
+                localStorage.removeItem('gistTimeFilters');
                 
                 window.location.reload();
             } catch (error) {
@@ -179,33 +212,73 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = line;
             linesFilter.appendChild(option);
         });
+
+        const uniqueTables = [...new Set(data.map(item => item.Tabela.trim()))].sort();
+        tableFilter.innerHTML = '';
+        uniqueTables.forEach(table => {
+            const option = document.createElement('option');
+            option.value = table;
+            option.textContent = table;
+            tableFilter.appendChild(option);
+        });
     }
 
-    function updateSelectedLinesDisplay() {
-        selectedLinesDisplay.innerHTML = '';
+    // --- FUNÇÃO ATUALIZADA E RENOMEADA ---
+    function updateSelectedFiltersDisplay() {
+        selectedFiltersDisplay.innerHTML = '';
+        
+        // Lógica para as Linhas (permanece a mesma)
         const selectedLines = Array.from(linesFilter.selectedOptions).map(option => option.value);
-
         selectedLines.forEach(line => {
             const tag = document.createElement('span');
-            tag.className = 'selected-line-tag';
-            tag.innerHTML = `${line} <span class="remove-tag" data-line="${line}">&times;</span>`;
+            tag.className = 'selected-line-tag'; // Reutilizando a mesma classe de estilo
+            tag.innerHTML = `Linha: ${line} <span class="remove-tag" data-line="${line}">&times;</span>`;
             tag.querySelector('.remove-tag').addEventListener('click', (e) => {
                 const lineToRemove = e.target.dataset.line;
                 const option = Array.from(linesFilter.options).find(opt => opt.value === lineToRemove);
                 if (option) option.selected = false;
                 linesFilter.dispatchEvent(new Event('change'));
             });
-            selectedLinesDisplay.appendChild(tag);
+            selectedFiltersDisplay.appendChild(tag);
+        });
+
+        // --- NOVA LÓGICA PARA AS TABELAS ---
+        const selectedTables = Array.from(tableFilter.selectedOptions).map(option => option.value);
+        selectedTables.forEach(table => {
+            const tag = document.createElement('span');
+            tag.className = 'selected-line-tag'; // Reutilizando a mesma classe de estilo
+            tag.innerHTML = `Tabela: ${table} <span class="remove-tag" data-table="${table}">&times;</span>`;
+            tag.querySelector('.remove-tag').addEventListener('click', (e) => {
+                const tableToRemove = e.target.dataset.table;
+                const option = Array.from(tableFilter.options).find(opt => opt.value === tableToRemove);
+                if (option) option.selected = false;
+                // Dispara o evento no filtro de tabela para atualizar a visualização
+                tableFilter.dispatchEvent(new Event('change'));
+            });
+            selectedFiltersDisplay.appendChild(tag);
         });
     }
 
+    // ... (renderTable e as demais funções permanecem exatamente iguais) ...
     function renderTable(data) {
         dataTableBody.innerHTML = '';
         if (updateInterval) clearInterval(updateInterval);
 
         const selectedLines = Array.from(linesFilter.selectedOptions).map(option => option.value);
-        const filteredByPassagem = data.filter(item => ['4', '7'].includes(item.TipoPassagem));
-        const filteredData = filteredByPassagem.filter(item => selectedLines.length === 0 || selectedLines.includes(item.Linha.trim()));
+        const selectedTables = Array.from(tableFilter.selectedOptions).map(option => option.value);
+        const startTime = startTimeFilter.value;
+        const endTime = endTimeFilter.value;
+
+        const filteredData = data.filter(item => {
+            const lineMatch = selectedLines.length === 0 || selectedLines.includes(item.Linha.trim());
+            const tableMatch = selectedTables.length === 0 || selectedTables.includes(item.Tabela.trim());
+            const startTimeMatch = !startTime || item.GOP_PDH_HORARIO_INICIO >= startTime;
+            const endTimeMatch = !endTime || item.GOP_PDH_HORARIO_INICIO <= endTime;
+            const passagemMatch = ['4', '7'].includes(item.TipoPassagem);
+            
+            return lineMatch && tableMatch && startTimeMatch && endTimeMatch && passagemMatch;
+        });
+        
         filteredData.sort((a, b) => a.GOP_PDH_HORARIO_INICIO.localeCompare(b.GOP_PDH_HORARIO_INICIO));
 
         if (filteredData.length === 0) {
@@ -221,7 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.dataset.scheduleTime = item.GOP_PDH_HORARIO_INICIO;
             const savedInput = userInputs[item.id] || { veiculo: '', realTime: '' };
 
-            // **CORREÇÃO DE ACESSIBILIDADE**: Adicionado aria-label
             tr.innerHTML = `
                 <td>${item.Linha}</td><td>${item.Tabela}</td><td>${item.Empresa}</td>
                 <td>${item.TipoPassagem}</td><td>${item.PostoControle}</td>
@@ -246,7 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (veiculoInput && realTimeInput) {
                 veiculoInput.addEventListener('input', () => saveUserInputs(item.id, veiculoInput.value, realTimeInput.value));
-                // **CORREÇÃO DO ERRO 'checkTime'**: Listener adicionado programaticamente
                 realTimeInput.addEventListener('change', () => {
                     checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
                     saveUserInputs(item.id, veiculoInput.value, realTimeInput.value);
@@ -270,9 +341,15 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('gistUserInputs', JSON.stringify(userInputs));
     }
 
-    function saveSelectedLines() {
+    function saveFilterState() {
         const selectedLines = Array.from(linesFilter.selectedOptions).map(option => option.value);
         localStorage.setItem('gistSelectedLines', JSON.stringify(selectedLines));
+
+        const selectedTables = Array.from(tableFilter.selectedOptions).map(option => option.value);
+        localStorage.setItem('gistSelectedTables', JSON.stringify(selectedTables));
+
+        const timeFilters = { start: startTimeFilter.value, end: endTimeFilter.value };
+        localStorage.setItem('gistTimeFilters', JSON.stringify(timeFilters));
     }
 
     function getFortalezaTime() {
