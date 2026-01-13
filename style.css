@@ -1,7 +1,3 @@
-
-Destaques da pasta
-Web app code (HTML, CSS, JS) facilitates loading Excel/CSV data for daily schedule review with real-time tracking.
-
 /* Definição de variáveis de cor para os temas */
 :root {
     --bg-color: #f4f4f4;
@@ -126,6 +122,12 @@ h1 {
     background-color: var(--danger-hover-bg);
 }
 
+.filter-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
 .filter-group {
     display: flex;
     flex-wrap: wrap;
@@ -137,7 +139,7 @@ h1 {
     font-weight: bold;
 }
 
-.controls input[type="file"], .controls select, .controls input[type="text"] {
+.controls input[type="file"], .controls select, .controls input[type="text"], .controls input[type="time"] {
     padding: 8px;
     border: 1px solid var(--input-border);
     border-radius: 4px;
@@ -145,7 +147,7 @@ h1 {
     color: var(--text-color);
 }
 
-#lines-filter {
+#lines-filter, #table-filter {
     width: 180px;
     min-height: 38px;
 }
@@ -154,8 +156,8 @@ h1 {
     width: 80px;
 }
 
-#selected-lines-display {
-    margin-top: 15px;
+#selected-filters-display {
+    margin-bottom: 15px;
     border: 1px solid var(--border-color);
     padding: 10px;
     border-radius: 4px;
@@ -252,7 +254,7 @@ tbody tr:nth-child(even) {
 @media (max-width: 768px) {
     .main-header { flex-direction: column; gap: 15px; }
     .controls { flex-direction: column; align-items: stretch; }
-    .filter-group { flex-direction: column; }
+    .filter-group { flex-direction: column; align-items: flex-start; }
     .filter-group label { margin-bottom: 5px; }
     table, thead, tbody, th, td, tr { display: block; }
     thead tr { position: absolute; top: -9999px; left: -9999px; }
