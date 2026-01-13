@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Programação Diária - GIST</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+    <header class="main-header">
+        <h1>Consulta de Programação Diária</h1>
+        <button id="theme-toggle">Alternar Tema</button>
+    </header>
+
+    <div class="controls">
+        <div class="file-controls">
+            <label for="file-input">Carregar Arquivo (Excel/CSV):</label>
+            <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
+            <button id="clear-data-button">Limpar Dados</button>
+            <p class="help-text">Carregue um novo arquivo ou limpe os dados para começar.</p>
+        </div>
+        <div id="filter-section" class="filter-group">
+            <label for="lines-input">Adicionar Linha:</label>
+            <input type="text" id="lines-input" placeholder="Ex: 038">
+            <label for="lines-filter">Filtrar por Linha:</label>
+            <select id="lines-filter" multiple>
+            </select>
+        </div>
+    </div>
+    
+    <div id="selected-lines-display"></div>
+
+    <div id="loading-message" class="callout" style="display:none; text-align:center;">Processando arquivo...</div>
+    <div id="error-message" class="callout error" style="display:none; text-align:center;"></div>
+    
+    <div id="results-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Linha</th>
+                    <th>Tabela</th>
+                    <th>Empresa</th>
+                    <th>Passagem</th>
+                    <th>Posto</th>
+                    <th>Início</th>
+                    <th>Horário Real</th>
+                </tr>
+            </thead>
+            <tbody id="data-table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="script.js"></script>
+
+</body>
+</html>
