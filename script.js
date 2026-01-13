@@ -1,9 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Elementos do DOM ---
     const fileInput = document.getElementById('file-input');
     const linesInput = document.getElementById('lines-input');
+    const tableInput = document.getElementById('table-input');
+    const postoInput = document.getElementById('posto-input');
     const linesFilter = document.getElementById('lines-filter');
-    const selectAllLinesButton = document.getElementById('select-all-lines');
+    const tableFilter = document.getElementById('table-filter');
+    const postoFilter = document.getElementById('posto-filter');
+    const selectAllLinesBtn = document.getElementById('select-all-lines');
+    const selectAllTablesBtn = document.getElementById('select-all-tables');
+    const selectAllPostosBtn = document.getElementById('select-all-postos');
     const selectedFiltersDisplay = document.getElementById('selected-filters-display');
     const dataTableBody = document.getElementById('data-table-body');
     const loadingMessage = document.getElementById('loading-message');
@@ -11,8 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const themeToggleButton = document.getElementById('theme-toggle');
     const clearDataButton = document.getElementById('clear-data-button');
     const filterSection = document.getElementById('filter-section');
-
-    const tableFilter = document.getElementById('table-filter');
     const startTimeFilter = document.getElementById('start-time-filter');
     const endTimeFilter = document.getElementById('end-time-filter');
 
@@ -23,71 +26,100 @@ document.addEventListener('DOMContentLoaded', () => {
         const realTimeInput = document.getElementById(`real-time-${itemId}`);
         const veiculoInput = document.getElementById(`veiculo-${itemId}`);
         const lostMessageSpan = document.getElementById(`lost-msg-${itemId}`);
-        
-        if (!lostMessageSpan) return;
+        if (!lostMessageSpan || !realTimeInput.value) return;
 
-        lostMessageSpan.style.display = 'none';
-        lostMessageSpan.className = 'lost-entry';
-
-        if (!realTimeInput.value) return;
         if (!veiculoInput.value || veiculoInput.value.length !== 5) {
-            alert('Por favor, insira um número de veículo válido com 5 dígitos antes de preencher o horário.');
+            alert('Insira um veículo de 5 dígitos.');
             realTimeInput.value = '';
-            saveUserInputs(itemId, veiculoInput.value, '');
             return;
         }
 
-        const fixedTolerance = 10;
-        const [hPrevisto, mPrevisto] = scheduledTimeStr.split(':').map(Number);
+        const [hPrev, mPrev] = scheduledTimeStr.split(':').map(Number);
         const [hReal, mReal] = realTimeInput.value.split(':').map(Number);
-        const diff = (hReal * 60 + mReal) - (hPrevisto * 60 + mPrevisto);
+        const diff = (hReal * 60 + mReal) - (hPrev * 60 + mPrev);
 
-        if (diff > fixedTolerance) {
+        lostMessageSpan.style.display = 'inline';
+        if (diff > 10) {
             lostMessageSpan.innerText = `(Atraso)`;
-            lostMessageSpan.classList.add('lost-atraso');
-            lostMessageSpan.style.display = 'inline';
-        } else if (diff < -fixedTolerance) {
+            lostMessageSpan.className = 'lost-entry lost-atraso';
+        } else if (diff < -10) {
             lostMessageSpan.innerText = `(Adiantamento)`;
-            lostMessageSpan.classList.add('lost-adiantamento');
-            lostMessageSpan.style.display = 'inline';
+            lostMessageSpan.className = 'lost-entry lost-adiantamento';
+        } else {
+            lostMessageSpan.style.display = 'none';
         }
-    }
-    
-    function applyTheme() {
-        const currentTheme = localStorage.getItem('theme');
-        document.body.classList.toggle('dark-mode', currentTheme === 'dark');
     }
 
     function initializeApp() {
-        applyTheme();
+        const currentTheme = localStorage.getItem('theme');
+        document.body.classList.toggle('dark-mode', currentTheme === 'dark');
         const savedData = localStorage.getItem('gistFileData');
         if (savedData) {
             allData = JSON.parse(savedData);
             filterSection.style.display = 'flex';
             populateFilters(allData);
-            
-            const savedLines = JSON.parse(localStorage.getItem('gistSelectedLines')) || [];
-            Array.from(linesFilter.options).forEach(option => {
-                option.selected = savedLines.includes(option.value);
-            });
-
-            const savedTables = JSON.parse(localStorage.getItem('gistSelectedTables')) || [];
-            Array.from(tableFilter.options).forEach(option => {
-                option.selected = savedTables.includes(option.value);
-            });
-
-            const savedTimeFilters = JSON.parse(localStorage.getItem('gistTimeFilters')) || { start: '', end: '' };
-            startTimeFilter.value = savedTimeFilters.start;
-            endTimeFilter.value = savedTimeFilters.end;
-            
+            loadFilterState();
             updateSelectedFiltersDisplay();
             renderTable(allData);
-        } else {
-            filterSection.style.display = 'none';
         }
     }
 
-    initializeApp();
+    function populateFilters(data) {
+        const fill = (el, key) => {
+            const items = [...new Set(data.map(item => item[key].trim()))].sort();
+            el.innerHTML = '';
+            items.forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val; opt.textContent = val;
+                el.appendChild(opt);
+            });
+        };
+        fill(linesFilter, 'Linha');
+        fill(tableFilter, 'Tabela');
+        fill(postoFilter, 'PostoControle');
+    }
+
+    function setupQuickSearch(inputEl, filterEl) {
+        inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = inputEl.value.trim();
+                if (val) {
+                    const found = Array.from(filterEl.options).find(opt => opt.value.toLowerCase() === val.toLowerCase());
+                    if (found) {
+                        found.selected = true;
+                        filterEl.dispatchEvent(new Event('change'));
+                    } else { alert(`"${val}" não encontrado.`); }
+                    inputEl.value = '';
+                }
+            }
+        });
+    }
+
+    setupQuickSearch(linesInput, linesFilter);
+    setupQuickSearch(tableInput, tableFilter);
+    setupQuickSearch(postoInput, postoFilter);
+
+    function handleToggleAll(filterEl) {
+        const options = Array.from(filterEl.options);
+        const allSelected = options.every(opt => opt.selected);
+        options.forEach(opt => opt.selected = !allSelected);
+        filterEl.dispatchEvent(new Event('change'));
+    }
+
+    [linesFilter, tableFilter, postoFilter].forEach(el => {
+        el.addEventListener('change', () => {
+            updateSelectedFiltersDisplay();
+            renderTable(allData);
+            saveFilterState();
+        });
+    });
+
+    selectAllLinesBtn.addEventListener('click', () => handleToggleAll(linesFilter));
+    selectAllTablesBtn.addEventListener('click', () => handleToggleAll(tableFilter));
+    selectAllPostosBtn.addEventListener('click', () => handleToggleAll(postoFilter));
+    startTimeFilter.addEventListener('input', () => { renderTable(allData); saveFilterState(); });
+    endTimeFilter.addEventListener('input', () => { renderTable(allData); saveFilterState(); });
 
     themeToggleButton.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
@@ -95,265 +127,157 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     clearDataButton.addEventListener('click', () => {
-        if (confirm('Tem certeza de que deseja limpar todos os dados carregados e preenchidos?')) {
+        if (confirm('Limpar todos os dados?')) {
             localStorage.clear();
             window.location.reload();
         }
     });
 
-    fileInput.addEventListener('change', handleFile);
-    
-    linesFilter.addEventListener('change', () => {
-        updateSelectedFiltersDisplay();
-        renderTable(allData);
-        saveFilterState();
-    });
-
-    tableFilter.addEventListener('change', () => {
-        updateSelectedFiltersDisplay();
-        renderTable(allData);
-        saveFilterState();
-    });
-
-    startTimeFilter.addEventListener('input', () => {
-        renderTable(allData);
-        saveFilterState();
-    });
-
-    endTimeFilter.addEventListener('input', () => {
-        renderTable(allData);
-        saveFilterState();
-    });
-
-    // Lógica do botão Selecionar Todas
-    selectAllLinesButton.addEventListener('click', () => {
-        const options = Array.from(linesFilter.options);
-        const allSelected = options.every(opt => opt.selected);
-        options.forEach(opt => opt.selected = !allSelected);
-        linesFilter.dispatchEvent(new Event('change'));
-    });
-
-    linesInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            const lineValue = linesInput.value.trim();
-            if (lineValue) {
-                const foundOption = Array.from(linesFilter.options).find(opt => opt.value === lineValue);
-                if (foundOption) {
-                    foundOption.selected = true;
-                    linesFilter.dispatchEvent(new Event('change'));
-                } else {
-                    alert(`Linha "${lineValue}" não encontrada no arquivo.`);
-                }
-                linesInput.value = '';
-            }
-        }
-    });
-
-    function handleFile(event) {
-        const file = event.target.files[0];
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
         if (!file) return;
-
         loadingMessage.style.display = 'block';
-        errorMessage.style.display = 'none';
-        dataTableBody.innerHTML = '';
-
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = (evt) => {
             try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array', raw: true });
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
-
-                if (jsonData.length === 0) throw new Error('O arquivo está vazio ou não pôde ser lido.');
-                
-                allData = jsonData.map((row, index) => {
-                    const horarioPrevistoStr = String(row.GOP_PDH_HORARIO_INICIO || '').slice(-5);
-                    if (!/^\d{2}:\d{2}$/.test(horarioPrevistoStr)) return null;
-                    
-                    return {
-                        id: index,
-                        Linha: String(row.GOP_PDH_LINHA), Tabela: String(row.GOP_PDH_TABELA),
-                        Empresa: String(row.GOP_PDH_EMPRESA), PostoControle: String(row.GOP_PDH_POSTO_CONTROLE_INICIAL),
-                        GOP_PDH_HORARIO_INICIO: horarioPrevistoStr, TipoPassagem: String(row.GOP_PDH_COD_PASSAGEM_INICIAL)
-                    };
-                }).filter(Boolean);
-
-                if (allData.length === 0) throw new Error('Nenhum dado válido encontrado no arquivo.');
-
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                allData = json.map((row, idx) => ({
+                    id: idx,
+                    Linha: String(row.GOP_PDH_LINHA || ''),
+                    Tabela: String(row.GOP_PDH_TABELA || ''),
+                    Empresa: String(row.GOP_PDH_EMPRESA || ''),
+                    PostoControle: String(row.GOP_PDH_POSTO_CONTROLE_INICIAL || ''),
+                    GOP_PDH_HORARIO_INICIO: String(row.GOP_PDH_HORARIO_INICIO || '').slice(-5),
+                    TipoPassagem: String(row.GOP_PDH_COD_PASSAGEM_INICIAL || '')
+                })).filter(i => /^\d{2}:\d{2}$/.test(i.GOP_PDH_HORARIO_INICIO));
                 localStorage.setItem('gistFileData', JSON.stringify(allData));
                 window.location.reload();
-            } catch (error) {
-                console.error('Erro ao processar o arquivo:', error);
-                errorMessage.innerHTML = `Erro ao processar o arquivo: ${error.message}`;
-                errorMessage.style.display = 'block';
-                loadingMessage.style.display = 'none';
-            }
+            } catch (err) { alert('Erro no arquivo'); loadingMessage.style.display = 'none'; }
         };
         reader.readAsArrayBuffer(file);
-    }
-    
-    function populateFilters(data) {
-        const uniqueLines = [...new Set(data.map(item => item.Linha.trim()))].sort();
-        linesFilter.innerHTML = '';
-        uniqueLines.forEach(line => {
-            const option = document.createElement('option');
-            option.value = line;
-            option.textContent = line;
-            linesFilter.appendChild(option);
-        });
-
-        const uniqueTables = [...new Set(data.map(item => item.Tabela.trim()))].sort();
-        tableFilter.innerHTML = '';
-        uniqueTables.forEach(table => {
-            const option = document.createElement('option');
-            option.value = table;
-            option.textContent = table;
-            tableFilter.appendChild(option);
-        });
-    }
+    });
 
     function updateSelectedFiltersDisplay() {
         selectedFiltersDisplay.innerHTML = '';
-        
-        const selectedLines = Array.from(linesFilter.selectedOptions).map(option => option.value);
-        selectedLines.forEach(line => {
-            const tag = document.createElement('span');
-            tag.className = 'selected-line-tag';
-            tag.innerHTML = `Linha: ${line} <span class="remove-tag" data-line="${line}">&times;</span>`;
-            tag.querySelector('.remove-tag').addEventListener('click', (e) => {
-                const lineToRemove = e.target.dataset.line;
-                const option = Array.from(linesFilter.options).find(opt => opt.value === lineToRemove);
-                if (option) option.selected = false;
-                linesFilter.dispatchEvent(new Event('change'));
+        const createTags = (filterEl, label) => {
+            Array.from(filterEl.selectedOptions).forEach(opt => {
+                const tag = document.createElement('span');
+                tag.className = 'selected-line-tag';
+                tag.innerHTML = `${label}: ${opt.value} <span class="remove-tag">&times;</span>`;
+                tag.querySelector('.remove-tag').onclick = () => {
+                    opt.selected = false;
+                    filterEl.dispatchEvent(new Event('change'));
+                };
+                selectedFiltersDisplay.appendChild(tag);
             });
-            selectedFiltersDisplay.appendChild(tag);
-        });
-
-        const selectedTables = Array.from(tableFilter.selectedOptions).map(option => option.value);
-        selectedTables.forEach(table => {
-            const tag = document.createElement('span');
-            tag.className = 'selected-line-tag';
-            tag.innerHTML = `Tabela: ${table} <span class="remove-tag" data-table="${table}">&times;</span>`;
-            tag.querySelector('.remove-tag').addEventListener('click', (e) => {
-                const tableToRemove = e.target.dataset.table;
-                const option = Array.from(tableFilter.options).find(opt => opt.value === tableToRemove);
-                if (option) option.selected = false;
-                tableFilter.dispatchEvent(new Event('change'));
-            });
-            selectedFiltersDisplay.appendChild(tag);
-        });
+        };
+        createTags(linesFilter, 'L');
+        createTags(tableFilter, 'T');
+        createTags(postoFilter, 'P');
     }
 
     function renderTable(data) {
         dataTableBody.innerHTML = '';
-        if (updateInterval) clearInterval(updateInterval);
+        const selLines = Array.from(linesFilter.selectedOptions).map(o => o.value);
+        const selTables = Array.from(tableFilter.selectedOptions).map(o => o.value);
+        const selPostos = Array.from(postoFilter.selectedOptions).map(o => o.value);
 
-        const selectedLines = Array.from(linesFilter.selectedOptions).map(option => option.value);
-        const selectedTables = Array.from(tableFilter.selectedOptions).map(option => option.value);
-        const startTime = startTimeFilter.value;
-        const endTime = endTimeFilter.value;
+        const filtered = data.filter(item => {
+            return (selLines.length === 0 || selLines.includes(item.Linha)) &&
+                   (selTables.length === 0 || selTables.includes(item.Tabela)) &&
+                   (selPostos.length === 0 || selPostos.includes(item.PostoControle)) &&
+                   (!startTimeFilter.value || item.GOP_PDH_HORARIO_INICIO >= startTimeFilter.value) &&
+                   (!endTimeFilter.value || item.GOP_PDH_HORARIO_INICIO <= endTimeFilter.value) &&
+                   ['4', '7'].includes(item.TipoPassagem);
+        }).sort((a, b) => a.GOP_PDH_HORARIO_INICIO.localeCompare(b.GOP_PDH_HORARIO_INICIO));
 
-        const filteredData = data.filter(item => {
-            const lineMatch = selectedLines.length === 0 || selectedLines.includes(item.Linha.trim());
-            const tableMatch = selectedTables.length === 0 || selectedTables.includes(item.Tabela.trim());
-            const startTimeMatch = !startTime || item.GOP_PDH_HORARIO_INICIO >= startTime;
-            const endTimeMatch = !endTime || item.GOP_PDH_HORARIO_INICIO <= endTime;
-            const passagemMatch = ['4', '7'].includes(item.TipoPassagem);
-            
-            return lineMatch && tableMatch && startTimeMatch && endTimeMatch && passagemMatch;
-        });
-        
-        filteredData.sort((a, b) => a.GOP_PDH_HORARIO_INICIO.localeCompare(b.GOP_PDH_HORARIO_INICIO));
-
-        if (filteredData.length === 0) {
-            dataTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">Nenhum resultado para os filtros selecionados.</td></tr>`;
-            return;
-        }
-
-        const userInputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
-        const fragment = document.createDocumentFragment();
-
-        filteredData.forEach(item => {
+        const inputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
+        filtered.forEach((item, index) => {
             const tr = document.createElement('tr');
-            tr.dataset.scheduleTime = item.GOP_PDH_HORARIO_INICIO;
-            const savedInput = userInputs[item.id] || { veiculo: '', realTime: '' };
-
+            const val = inputs[item.id] || { veiculo: '', realTime: '' };
             tr.innerHTML = `
                 <td>${item.Linha}</td><td>${item.Tabela}</td><td>${item.Empresa}</td>
                 <td>${item.TipoPassagem}</td><td>${item.PostoControle}</td>
-                <td>${item.GOP_PDH_HORARIO_INICIO} <span class="passed-time-dot" data-schedule-time="${item.GOP_PDH_HORARIO_INICIO}"></span><span id="lost-msg-${item.id}" class="lost-entry"></span></td>
+                <td>${item.GOP_PDH_HORARIO_INICIO} <span class="passed-time-dot" data-schedule-time="${item.GOP_PDH_HORARIO_INICIO}" data-item-id="${item.id}"></span><span id="lost-msg-${item.id}" class="lost-entry"></span></td>
                 <td><div class="input-group">
-                    <input type="text" placeholder="Veículo" pattern="\\d{5}" maxlength="5" id="veiculo-${item.id}" value="${savedInput.veiculo}">
-                    <input type="time" id="real-time-${item.id}" value="${savedInput.realTime}">
+                    <input type="text" maxlength="5" id="veiculo-${item.id}" value="${val.veiculo}" class="v-input">
+                    <input type="time" id="real-time-${item.id}" value="${val.realTime}" class="t-input">
                 </div></td>`;
-            fragment.appendChild(tr);
-        });
-
-        dataTableBody.appendChild(fragment);
-        addEventListenersToTable(filteredData);
-        updatePassedTimes();
-        updateInterval = setInterval(updatePassedTimes, 30000);
-    }
-    
-    function addEventListenersToTable(tableData) {
-        tableData.forEach(item => {
-            const veiculoInput = document.getElementById(`veiculo-${item.id}`);
-            const realTimeInput = document.getElementById(`real-time-${item.id}`);
-
-            if (veiculoInput && realTimeInput) {
-                veiculoInput.addEventListener('input', () => saveUserInputs(item.id, veiculoInput.value, realTimeInput.value));
-                realTimeInput.addEventListener('change', () => {
-                    checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
-                    saveUserInputs(item.id, veiculoInput.value, realTimeInput.value);
-                });
-                veiculoInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        realTimeInput.focus();
-                    }
-                });
-                if (realTimeInput.value) {
-                    checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
+            dataTableBody.appendChild(tr);
+            
+            const vIn = tr.querySelector(`#veiculo-${item.id}`);
+            const rIn = tr.querySelector(`#real-time-${item.id}`);
+            
+            // Navegação com ENTER
+            vIn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    rIn.focus();
                 }
-            }
-        });
-    }
+            });
 
-    function saveUserInputs(itemId, veiculo, realTime) {
-        const userInputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
-        userInputs[itemId] = { veiculo, realTime };
-        localStorage.setItem('gistUserInputs', JSON.stringify(userInputs));
+            rIn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // Procura o próximo input de veículo na tabela
+                    const nextRow = tr.nextElementSibling;
+                    if (nextRow) {
+                        const nextVIn = nextRow.querySelector('.v-input');
+                        if (nextVIn) nextVIn.focus();
+                    }
+                }
+            });
+
+            const updateRow = () => {
+                inputs[item.id] = { veiculo: vIn.value, realTime: rIn.value };
+                localStorage.setItem('gistUserInputs', JSON.stringify(inputs));
+                checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
+                updatePassedTimes();
+            };
+
+            vIn.oninput = rIn.onchange = updateRow;
+            if (val.realTime) checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
+        });
+        updatePassedTimes();
     }
 
     function saveFilterState() {
-        const selectedLines = Array.from(linesFilter.selectedOptions).map(option => option.value);
-        localStorage.setItem('gistSelectedLines', JSON.stringify(selectedLines));
-
-        const selectedTables = Array.from(tableFilter.selectedOptions).map(option => option.value);
-        localStorage.setItem('gistSelectedTables', JSON.stringify(selectedTables));
-
-        const timeFilters = { start: startTimeFilter.value, end: endTimeFilter.value };
-        localStorage.setItem('gistTimeFilters', JSON.stringify(timeFilters));
+        const state = {
+            lines: Array.from(linesFilter.selectedOptions).map(o => o.value),
+            tables: Array.from(tableFilter.selectedOptions).map(o => o.value),
+            postos: Array.from(postoFilter.selectedOptions).map(o => o.value),
+            start: startTimeFilter.value,
+            end: endTimeFilter.value
+        };
+        localStorage.setItem('gistFilterState', JSON.stringify(state));
     }
 
-    function getFortalezaTime() {
-        const now = new Date();
-        const formatter = new Intl.DateTimeFormat('pt-BR', {
-            hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Fortaleza'
-        });
-        const [hour, minute] = formatter.format(now).split(':').map(Number);
-        return hour * 60 + minute;
+    function loadFilterState() {
+        const state = JSON.parse(localStorage.getItem('gistFilterState'));
+        if (!state) return;
+        const apply = (el, vals) => Array.from(el.options).forEach(o => o.selected = vals.includes(o.value));
+        apply(linesFilter, state.lines || []);
+        apply(tableFilter, state.tables || []);
+        apply(postoFilter, state.postos || []);
+        startTimeFilter.value = state.start || '';
+        endTimeFilter.value = state.end || '';
     }
 
     function updatePassedTimes() {
-        const currentTimeInMinutes = getFortalezaTime();
+        const now = new Date();
+        const cur = now.getHours() * 60 + now.getMinutes();
         document.querySelectorAll('.passed-time-dot').forEach(dot => {
-            const [hour, minute] = dot.dataset.scheduleTime.split(':').map(Number);
-            const scheduledTimeInMinutes = hour * 60 + minute;
-            dot.classList.toggle('visible', scheduledTimeInMinutes < currentTimeInMinutes);
+            const itemId = dot.dataset.itemId;
+            const rIn = document.getElementById(`real-time-${itemId}`);
+            const [h, m] = dot.dataset.scheduleTime.split(':').map(Number);
+            const hasVal = rIn && rIn.value !== "";
+            dot.classList.toggle('visible', (h * 60 + m) < cur && !hasVal);
         });
     }
+
+    initializeApp();
+    if (updateInterval) clearInterval(updateInterval);
+    updateInterval = setInterval(updatePassedTimes, 30000);
 });
