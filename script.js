@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('file-input');
     const linesInput = document.getElementById('lines-input');
     const linesFilter = document.getElementById('lines-filter');
-    // VARIÁVEL ATUALIZADA AQUI
+    const selectAllLinesButton = document.getElementById('select-all-lines');
     const selectedFiltersDisplay = document.getElementById('selected-filters-display');
     const dataTableBody = document.getElementById('data-table-body');
     const loadingMessage = document.getElementById('loading-message');
@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let allData = [];
     let updateInterval;
 
-    // ... (checkTime e outras funções permanecem iguais) ...
     function checkTime(itemId, scheduledTimeStr) {
         const realTimeInput = document.getElementById(`real-time-${itemId}`);
         const veiculoInput = document.getElementById(`veiculo-${itemId}`);
@@ -81,7 +80,6 @@ document.addEventListener('DOMContentLoaded', () => {
             startTimeFilter.value = savedTimeFilters.start;
             endTimeFilter.value = savedTimeFilters.end;
             
-            // CHAMADA À FUNÇÃO ATUALIZADA
             updateSelectedFiltersDisplay();
             renderTable(allData);
         } else {
@@ -91,8 +89,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     initializeApp();
 
-    // ... (Listeners de themeToggleButton, clearDataButton, fileInput permanecem iguais) ...
-
     themeToggleButton.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
@@ -100,11 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     clearDataButton.addEventListener('click', () => {
         if (confirm('Tem certeza de que deseja limpar todos os dados carregados e preenchidos?')) {
-            localStorage.removeItem('gistFileData');
-            localStorage.removeItem('gistUserInputs');
-            localStorage.removeItem('gistSelectedLines');
-            localStorage.removeItem('gistSelectedTables'); 
-            localStorage.removeItem('gistTimeFilters'); 
+            localStorage.clear();
             window.location.reload();
         }
     });
@@ -112,27 +104,33 @@ document.addEventListener('DOMContentLoaded', () => {
     fileInput.addEventListener('change', handleFile);
     
     linesFilter.addEventListener('change', () => {
-        // CHAMADA À FUNÇÃO ATUALIZADA
         updateSelectedFiltersDisplay();
         renderTable(allData);
         saveFilterState();
     });
 
     tableFilter.addEventListener('change', () => {
-        // CHAMADA À FUNÇÃO ADICIONADA AQUI
         updateSelectedFiltersDisplay();
         renderTable(allData);
         saveFilterState();
     });
 
-    // ... (outros listeners permanecem iguais) ...
     startTimeFilter.addEventListener('input', () => {
         renderTable(allData);
         saveFilterState();
     });
+
     endTimeFilter.addEventListener('input', () => {
         renderTable(allData);
         saveFilterState();
+    });
+
+    // Lógica do botão Selecionar Todas
+    selectAllLinesButton.addEventListener('click', () => {
+        const options = Array.from(linesFilter.options);
+        const allSelected = options.every(opt => opt.selected);
+        options.forEach(opt => opt.selected = !allSelected);
+        linesFilter.dispatchEvent(new Event('change'));
     });
 
     linesInput.addEventListener('keydown', (e) => {
@@ -152,7 +150,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // ... (handleFile e populateFilters permanecem iguais) ...
     function handleFile(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -187,11 +184,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (allData.length === 0) throw new Error('Nenhum dado válido encontrado no arquivo.');
 
                 localStorage.setItem('gistFileData', JSON.stringify(allData));
-                localStorage.removeItem('gistUserInputs');
-                localStorage.removeItem('gistSelectedLines');
-                localStorage.removeItem('gistSelectedTables');
-                localStorage.removeItem('gistTimeFilters');
-                
                 window.location.reload();
             } catch (error) {
                 console.error('Erro ao processar o arquivo:', error);
@@ -223,15 +215,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- FUNÇÃO ATUALIZADA E RENOMEADA ---
     function updateSelectedFiltersDisplay() {
         selectedFiltersDisplay.innerHTML = '';
         
-        // Lógica para as Linhas (permanece a mesma)
         const selectedLines = Array.from(linesFilter.selectedOptions).map(option => option.value);
         selectedLines.forEach(line => {
             const tag = document.createElement('span');
-            tag.className = 'selected-line-tag'; // Reutilizando a mesma classe de estilo
+            tag.className = 'selected-line-tag';
             tag.innerHTML = `Linha: ${line} <span class="remove-tag" data-line="${line}">&times;</span>`;
             tag.querySelector('.remove-tag').addEventListener('click', (e) => {
                 const lineToRemove = e.target.dataset.line;
@@ -242,24 +232,21 @@ document.addEventListener('DOMContentLoaded', () => {
             selectedFiltersDisplay.appendChild(tag);
         });
 
-        // --- NOVA LÓGICA PARA AS TABELAS ---
         const selectedTables = Array.from(tableFilter.selectedOptions).map(option => option.value);
         selectedTables.forEach(table => {
             const tag = document.createElement('span');
-            tag.className = 'selected-line-tag'; // Reutilizando a mesma classe de estilo
+            tag.className = 'selected-line-tag';
             tag.innerHTML = `Tabela: ${table} <span class="remove-tag" data-table="${table}">&times;</span>`;
             tag.querySelector('.remove-tag').addEventListener('click', (e) => {
                 const tableToRemove = e.target.dataset.table;
                 const option = Array.from(tableFilter.options).find(opt => opt.value === tableToRemove);
                 if (option) option.selected = false;
-                // Dispara o evento no filtro de tabela para atualizar a visualização
                 tableFilter.dispatchEvent(new Event('change'));
             });
             selectedFiltersDisplay.appendChild(tag);
         });
     }
 
-    // ... (renderTable e as demais funções permanecem exatamente iguais) ...
     function renderTable(data) {
         dataTableBody.innerHTML = '';
         if (updateInterval) clearInterval(updateInterval);
@@ -299,8 +286,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${item.TipoPassagem}</td><td>${item.PostoControle}</td>
                 <td>${item.GOP_PDH_HORARIO_INICIO} <span class="passed-time-dot" data-schedule-time="${item.GOP_PDH_HORARIO_INICIO}"></span><span id="lost-msg-${item.id}" class="lost-entry"></span></td>
                 <td><div class="input-group">
-                    <input type="text" placeholder="Veículo" pattern="\\d{5}" maxlength="5" id="veiculo-${item.id}" value="${savedInput.veiculo}" aria-label="Veículo para a linha ${item.Linha} às ${item.GOP_PDH_HORARIO_INICIO}">
-                    <input type="time" id="real-time-${item.id}" value="${savedInput.realTime}" aria-label="Horário real para a linha ${item.Linha} às ${item.GOP_PDH_HORARIO_INICIO}">
+                    <input type="text" placeholder="Veículo" pattern="\\d{5}" maxlength="5" id="veiculo-${item.id}" value="${savedInput.veiculo}">
+                    <input type="time" id="real-time-${item.id}" value="${savedInput.realTime}">
                 </div></td>`;
             fragment.appendChild(tr);
         });
