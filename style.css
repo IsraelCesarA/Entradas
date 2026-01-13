@@ -1,3 +1,7 @@
+
+Destaques da pasta
+Web app code (HTML, CSS, JS) facilitates loading Excel/CSV data for daily schedule review with real-time tracking.
+
 /* Definição de variáveis de cor para os temas */
 :root {
     --bg-color: #f4f4f4;
@@ -262,11 +266,4 @@ tbody tr:nth-child(even) {
     td:nth-of-type(5):before { content: "Posto"; }
     td:nth-of-type(6):before { content: "Início"; }
     td:nth-of-type(7):before { content: "Horário Real"; }
-}
-#table-filter-section {
-    margin-top: 10px;
-}
-
-#table-filter {
-    width: 250px;
 }
