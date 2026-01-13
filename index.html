@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Programação Diária - GIST</title>
+    <title>Entradas da Operação</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -27,7 +27,10 @@
                 <label for="lines-input">Adicionar Linha:</label>
                 <input type="text" id="lines-input" placeholder="Ex: 038">
                 <label for="lines-filter">Filtrar por Linha:</label>
-                <select id="lines-filter" multiple></select>
+                <div class="select-with-button">
+                    <select id="lines-filter" multiple></select>
+                    <button id="select-all-lines" class="secondary-button">Selecionar Todas</button>
+                </div>
             </div>
     
             <div class="filter-group">
