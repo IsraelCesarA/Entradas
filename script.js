@@ -1,3 +1,7 @@
+
+Destaques da pasta
+Web app code (HTML, CSS, JS) facilitates loading Excel/CSV data for daily schedule review with real-time tracking.
+
 document.addEventListener('DOMContentLoaded', () => {
     // --- Elementos do DOM ---
     const fileInput = document.getElementById('file-input');
