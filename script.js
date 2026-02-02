@@ -12,12 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedFiltersDisplay = document.getElementById('selected-filters-display');
     const dataTableBody = document.getElementById('data-table-body');
     const loadingMessage = document.getElementById('loading-message');
-    const errorMessage = document.getElementById('error-message');
     const themeToggleButton = document.getElementById('theme-toggle');
     const clearDataButton = document.getElementById('clear-data-button');
     const filterSection = document.getElementById('filter-section');
     const startTimeFilter = document.getElementById('start-time-filter');
     const endTimeFilter = document.getElementById('end-time-filter');
+    
+    // Botões de Exportação
+    const exportExcelBtn = document.getElementById('export-excel');
+    const exportPdfBtn = document.getElementById('export-pdf');
 
     let allData = [];
     let updateInterval;
@@ -194,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).sort((a, b) => a.GOP_PDH_HORARIO_INICIO.localeCompare(b.GOP_PDH_HORARIO_INICIO));
 
         const inputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
-        filtered.forEach((item, index) => {
+        filtered.forEach((item) => {
             const tr = document.createElement('tr');
             const val = inputs[item.id] || { veiculo: '', realTime: '' };
             tr.innerHTML = `
@@ -210,23 +213,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const vIn = tr.querySelector(`#veiculo-${item.id}`);
             const rIn = tr.querySelector(`#real-time-${item.id}`);
             
-            // Navegação com ENTER
-            vIn.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    rIn.focus();
-                }
-            });
-
+            vIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); rIn.focus(); } });
             rIn.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    // Procura o próximo input de veículo na tabela
                     const nextRow = tr.nextElementSibling;
-                    if (nextRow) {
-                        const nextVIn = nextRow.querySelector('.v-input');
-                        if (nextVIn) nextVIn.focus();
-                    }
+                    if (nextRow) nextRow.querySelector('.v-input').focus();
                 }
             });
 
@@ -276,6 +268,62 @@ document.addEventListener('DOMContentLoaded', () => {
             dot.classList.toggle('visible', (h * 60 + m) < cur && !hasVal);
         });
     }
+
+    // --- FUNÇÕES DE EXPORTAÇÃO ---
+    
+    function getTableDataForExport() {
+        const rows = [];
+        const trs = document.querySelectorAll('#data-table-body tr');
+        trs.forEach(tr => {
+            const tds = tr.querySelectorAll('td');
+            const vInput = tr.querySelector('.v-input');
+            const rInput = tr.querySelector('.t-input');
+            const status = tr.querySelector('.lost-entry').innerText;
+
+            rows.push({
+                Linha: tds[0].innerText,
+                Tabela: tds[1].innerText,
+                Empresa: tds[2].innerText,
+                Posto: tds[4].innerText,
+                Previsto: tds[5].innerText.split(' ')[0],
+                Veiculo: vInput.value,
+                Real: rInput.value,
+                Obs: status
+            });
+        });
+        return rows;
+    }
+
+    function exportToExcel() {
+        const data = getTableDataForExport();
+        if (!data.length) return alert("Sem dados.");
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Programação");
+        XLSX.writeFile(wb, `GIST_${new Date().toLocaleDateString()}.xlsx`);
+    }
+
+    function exportToPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        const data = getTableDataForExport();
+        if (!data.length) return alert("Sem dados.");
+
+        const tableBody = data.map(i => [i.Linha, i.Tabela, i.Posto, i.Previsto, i.Veiculo, i.Real, i.Obs]);
+        
+        doc.text("Relatório de Programação Diária", 14, 15);
+        doc.autoTable({
+            head: [['Linha', 'Tab.', 'Posto', 'Prev.', 'Veíc.', 'Real', 'Status']],
+            body: tableBody,
+            startY: 20,
+            theme: 'grid',
+            styles: { fontSize: 8 }
+        });
+        doc.save(`GIST_${new Date().toLocaleDateString()}.pdf`);
+    }
+
+    exportExcelBtn.addEventListener('click', exportToExcel);
+    exportPdfBtn.addEventListener('click', exportToPDF);
 
     initializeApp();
     if (updateInterval) clearInterval(updateInterval);
