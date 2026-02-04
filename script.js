@@ -17,8 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterSection = document.getElementById('filter-section');
     const startTimeFilter = document.getElementById('start-time-filter');
     const endTimeFilter = document.getElementById('end-time-filter');
-    
-    // Botões de Exportação
     const exportExcelBtn = document.getElementById('export-excel');
     const exportPdfBtn = document.getElementById('export-pdf');
 
@@ -199,41 +197,107 @@ document.addEventListener('DOMContentLoaded', () => {
         const inputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
         filtered.forEach((item) => {
             const tr = document.createElement('tr');
-            const val = inputs[item.id] || { veiculo: '', realTime: '' };
+            const val = inputs[item.id] || { veiculo: '', realTime: '', obs: '' };
             tr.innerHTML = `
                 <td>${item.Linha}</td><td>${item.Tabela}</td><td>${item.Empresa}</td>
                 <td>${item.TipoPassagem}</td><td>${item.PostoControle}</td>
                 <td>${item.GOP_PDH_HORARIO_INICIO} <span class="passed-time-dot" data-schedule-time="${item.GOP_PDH_HORARIO_INICIO}" data-item-id="${item.id}"></span><span id="lost-msg-${item.id}" class="lost-entry"></span></td>
                 <td><div class="input-group">
-                    <input type="text" maxlength="5" id="veiculo-${item.id}" value="${val.veiculo}" class="v-input">
+                    <input type="text" maxlength="5" id="veiculo-${item.id}" value="${val.veiculo}" class="v-input" placeholder="Veíc.">
                     <input type="time" id="real-time-${item.id}" value="${val.realTime}" class="t-input">
-                </div></td>`;
+                </div></td>
+                <td><input type="text" id="obs-${item.id}" value="${val.obs}" class="obs-input" placeholder="..."></td>`;
             dataTableBody.appendChild(tr);
             
             const vIn = tr.querySelector(`#veiculo-${item.id}`);
             const rIn = tr.querySelector(`#real-time-${item.id}`);
+            const oIn = tr.querySelector(`#obs-${item.id}`);
             
-            vIn.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); rIn.focus(); } });
+            // Navegação entre campos com ENTER
+            vIn.addEventListener('keydown', (e) => { 
+                if (e.key === 'Enter') { e.preventDefault(); rIn.focus(); } 
+            });
+
             rIn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); oIn.focus(); } 
+            });
+
+            oIn.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
                     const nextRow = tr.nextElementSibling;
-                    if (nextRow) nextRow.querySelector('.v-input').focus();
+                    if (nextRow) {
+                        const nextVIn = nextRow.querySelector('.v-input');
+                        if (nextVIn) nextVIn.focus();
+                    }
                 }
             });
 
             const updateRow = () => {
-                inputs[item.id] = { veiculo: vIn.value, realTime: rIn.value };
+                inputs[item.id] = { veiculo: vIn.value, realTime: rIn.value, obs: oIn.value };
                 localStorage.setItem('gistUserInputs', JSON.stringify(inputs));
                 checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
                 updatePassedTimes();
             };
 
-            vIn.oninput = rIn.onchange = updateRow;
+            vIn.oninput = rIn.onchange = oIn.oninput = updateRow;
             if (val.realTime) checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
         });
         updatePassedTimes();
     }
+
+    function getTableDataForExport() {
+        const rows = [];
+        const trs = document.querySelectorAll('#data-table-body tr');
+        trs.forEach(tr => {
+            const tds = tr.querySelectorAll('td');
+            const obsVal = tr.querySelector('.obs-input').value;
+            const vInput = tr.querySelector('.v-input').value;
+            const rInput = tr.querySelector('.t-input').value;
+            const status = tr.querySelector('.lost-entry').innerText;
+
+            rows.push({
+                Linha: tds[0].innerText,
+                Tabela: tds[1].innerText,
+                Empresa: tds[2].innerText,
+                Posto: tds[4].innerText,
+                Previsto: tds[5].innerText.split(' ')[0],
+                Veiculo: vInput,
+                Real: rInput,
+                Status: status,
+                Observacao: obsVal
+            });
+        });
+        return rows;
+    }
+
+    exportExcelBtn.addEventListener('click', () => {
+        const data = getTableDataForExport();
+        if (!data.length) return alert("Sem dados.");
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Programação");
+        XLSX.writeFile(wb, `GIST_${new Date().toLocaleDateString()}.xlsx`);
+    });
+
+    exportPdfBtn.addEventListener('click', () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('l', 'mm', 'a4');
+        const data = getTableDataForExport();
+        if (!data.length) return alert("Sem dados.");
+
+        const tableBody = data.map(i => [i.Linha, i.Tabela, i.Posto, i.Previsto, i.Veiculo, i.Real, i.Status, i.Observacao]);
+        
+        doc.text("Relatório de Programação Diária", 14, 15);
+        doc.autoTable({
+            head: [['Linha', 'Tab.', 'Posto', 'Prev.', 'Veíc.', 'Real', 'Status', 'Obs']],
+            body: tableBody,
+            startY: 20,
+            theme: 'grid',
+            styles: { fontSize: 7 }
+        });
+        doc.save(`GIST_${new Date().toLocaleDateString()}.pdf`);
+    });
 
     function saveFilterState() {
         const state = {
@@ -268,62 +332,6 @@ document.addEventListener('DOMContentLoaded', () => {
             dot.classList.toggle('visible', (h * 60 + m) < cur && !hasVal);
         });
     }
-
-    // --- FUNÇÕES DE EXPORTAÇÃO ---
-    
-    function getTableDataForExport() {
-        const rows = [];
-        const trs = document.querySelectorAll('#data-table-body tr');
-        trs.forEach(tr => {
-            const tds = tr.querySelectorAll('td');
-            const vInput = tr.querySelector('.v-input');
-            const rInput = tr.querySelector('.t-input');
-            const status = tr.querySelector('.lost-entry').innerText;
-
-            rows.push({
-                Linha: tds[0].innerText,
-                Tabela: tds[1].innerText,
-                Empresa: tds[2].innerText,
-                Posto: tds[4].innerText,
-                Previsto: tds[5].innerText.split(' ')[0],
-                Veiculo: vInput.value,
-                Real: rInput.value,
-                Obs: status
-            });
-        });
-        return rows;
-    }
-
-    function exportToExcel() {
-        const data = getTableDataForExport();
-        if (!data.length) return alert("Sem dados.");
-        const ws = XLSX.utils.json_to_sheet(data);
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Programação");
-        XLSX.writeFile(wb, `GIST_${new Date().toLocaleDateString()}.xlsx`);
-    }
-
-    function exportToPDF() {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const data = getTableDataForExport();
-        if (!data.length) return alert("Sem dados.");
-
-        const tableBody = data.map(i => [i.Linha, i.Tabela, i.Posto, i.Previsto, i.Veiculo, i.Real, i.Obs]);
-        
-        doc.text("Relatório de Programação Diária", 14, 15);
-        doc.autoTable({
-            head: [['Linha', 'Tab.', 'Posto', 'Prev.', 'Veíc.', 'Real', 'Status']],
-            body: tableBody,
-            startY: 20,
-            theme: 'grid',
-            styles: { fontSize: 8 }
-        });
-        doc.save(`GIST_${new Date().toLocaleDateString()}.pdf`);
-    }
-
-    exportExcelBtn.addEventListener('click', exportToExcel);
-    exportPdfBtn.addEventListener('click', exportToPDF);
 
     initializeApp();
     if (updateInterval) clearInterval(updateInterval);
