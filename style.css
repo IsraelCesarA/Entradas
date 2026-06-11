@@ -37,16 +37,16 @@ body {
     background-color: var(--bg-color); 
     color: var(--text-color); 
     padding: 10px; 
-    /* BANDEIRAS NAS LATERAIS - PLANO DE FUNDO */
+    /* BANDEIRAS NO LUGAR DAS SETAS */
     background-image: 
         url('https://cdn-icons-png.flaticon.com/512/225/225455.png'), /* Bandeira esquerda */
         url('https://cdn-icons-png.flaticon.com/512/225/225455.png'); /* Bandeira direita */
     background-position: 
-        left 20px top 50%, 
-        right 20px top 50%;
+        left 30px center, 
+        right 30px center;
     background-repeat: no-repeat;
-    background-size: 120px auto; /* Tamanho das bandeiras */
-    background-attachment: fixed; /* Fixa ao rolar a página */
+    background-size: 80px auto; /* Tamanho igual ao das setas */
+    background-attachment: fixed;
 }
 
 .container { 
@@ -56,9 +56,23 @@ body {
     padding: 20px; 
     border-radius: 8px; 
     box-shadow: 0 2px 8px rgba(0, 156, 59, 0.2); 
-    border: 2px solid var(--brasil-amarelo);
+    border: 3px solid var(--brasil-amarelo);
     position: relative;
-    z-index: 2; /* Fica por cima das bandeiras */
+    z-index: 2;
+}
+
+/* Modo escuro - bandeira com brilho para aparecer bem */
+body.dark-mode {
+    background-image: 
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'), 
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png');
+    background-position: 
+        left 30px center, 
+        right 30px center;
+    background-repeat: no-repeat;
+    background-size: 80px auto;
+    background-attachment: fixed;
+    filter: brightness(1.15);
 }
 
 .main-header { 
@@ -286,19 +300,4 @@ tr:hover {
 #clear-data-button:hover {
     background: #b02a37;
     transition: all 0.3s ease;
-}
-
-/* AJUSTE NO MODO ESCURO PARA AS BANDEIRAS */
-body.dark-mode {
-    background-image: 
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'), 
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png');
-    background-position: 
-        left 20px top 50%, 
-        right 20px top 50%;
-    background-repeat: no-repeat;
-    background-size: 120px auto;
-    background-attachment: fixed;
-    /* Deixa a bandeira um pouco mais clara para aparecer no fundo escuro */
-    filter: brightness(1.2);
 }
