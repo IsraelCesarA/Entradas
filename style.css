@@ -1,35 +1,52 @@
 :root {
-    --bg-color: #f4f9f4; /* Fundo claro com tom verde suave */
-    --container-bg-color: #ffffff;
-    --text-color: #1a1a1a;
-    --border-color: #d4e8d4; /* Borda verde clara */
-    --primary-color: #009c3b; /* Verde principal do Brasil */
-    --secondary-color: #ffdf00; /* Amarelo principal do Brasil */
-    --accent-color: #002776; /* Azul da bandeira */
-    --input-bg: #ffffff;
+    /* Cores principais - Tema Brasil */
+    --brasil-verde: #009c3b;
+    --brasil-amarelo: #ffdf00;
+    --brasil-azul: #002776;
+    --brasil-branco: #ffffff;
+    --brasil-cinza-claro: #f8f9fa;
+    --brasil-cinza-medio: #e9ecef;
+    --brasil-cinza-escuro: #343a40;
+
+    /* Variáveis originais redefinidas com o tema */
+    --bg-color: var(--brasil-cinza-claro);
+    --container-bg-color: var(--brasil-branco);
+    --text-color: var(--brasil-cinza-escuro);
+    --border-color: var(--brasil-cinza-medio);
+    --primary-color: var(--brasil-verde);
+    --input-bg: var(--brasil-branco);
     --danger-color: #dc3545;
-    --table-header-bg: #f0f8e8; /* Cabeçalho verde muito claro */
-    --success-color: #009c3b; /* Mesmo verde principal */
-    --pdf-color: #002776; /* Azul para destaque de PDF */
+    --table-header-bg: var(--brasil-amarelo);
+    --success-color: var(--brasil-verde);
+    --pdf-color: var(--brasil-azul);
 }
 
 body.dark-mode {
-    --bg-color: #0a2a15; /* Verde escuro como fundo */
-    --container-bg-color: #103d20; /* Container verde mais forte */
-    --text-color: #fff9c4; /* Texto em tom amarelo claro */
-    --border-color: #206030; /* Borda verde média */
-    --primary-color: #34c759; /* Verde mais claro para contraste no escuro */
-    --secondary-color: #ffeb3b; /* Amarelo brilhante no escuro */
-    --accent-color: #4285f4; /* Azul mais claro para destaque */
-    --input-bg: #154a28; /* Fundo de input verde escuro */
-    --table-header-bg: #18522e; /* Cabeçalho verde escuro */
+    /* Modo escuro com cores do Brasil ajustadas para contraste */
+    --bg-color: #0a2e17; /* Verde escuro */
+    --container-bg-color: #004d1a; /* Verde mais forte */
+    --text-color: #f8f9fa;
+    --border-color: #007a29;
+    --primary-color: var(--brasil-amarelo);
+    --input-bg: #006622;
+    --table-header-bg: #ccb200; /* Amarelo escuro */
 }
 
 body { 
     font-family: sans-serif; 
-    background: var(--bg-color); 
+    background-color: var(--bg-color); 
     color: var(--text-color); 
     padding: 10px; 
+    /* BANDEIRAS NAS LATERAIS - PLANO DE FUNDO */
+    background-image: 
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'), /* Bandeira esquerda */
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'); /* Bandeira direita */
+    background-position: 
+        left 20px top 50%, 
+        right 20px top 50%;
+    background-repeat: no-repeat;
+    background-size: 120px auto; /* Tamanho das bandeiras */
+    background-attachment: fixed; /* Fixa ao rolar a página */
 }
 
 .container { 
@@ -38,8 +55,10 @@ body {
     background: var(--container-bg-color); 
     padding: 20px; 
     border-radius: 8px; 
-    box-shadow: 0 2px 8px rgba(0, 156, 59, 0.15); /* Sombra com tom verde */
-    border: 2px solid var(--secondary-color); /* Borda amarela no container */
+    box-shadow: 0 2px 8px rgba(0, 156, 59, 0.2); 
+    border: 2px solid var(--brasil-amarelo);
+    position: relative;
+    z-index: 2; /* Fica por cima das bandeiras */
 }
 
 .main-header { 
@@ -47,7 +66,7 @@ body {
     justify-content: space-between; 
     align-items: center; 
     margin-bottom: 20px; 
-    border-bottom: 2px solid var(--secondary-color); /* Linha amarela no cabeçalho */
+    border-bottom: 3px solid var(--brasil-verde);
     padding-bottom: 10px;
 }
 
@@ -76,8 +95,8 @@ body {
     gap: 10px; 
     align-items: center; 
     padding: 10px; 
-    border-bottom: 1px solid var(--border-color); 
-    background: rgba(255, 223, 0, 0.05); /* Fundo amarelo muito suave */
+    border-bottom: 2px solid var(--brasil-amarelo); 
+    background: rgba(255, 223, 0, 0.1);
     border-radius: 6px;
 }
 
@@ -90,88 +109,90 @@ body {
     color: var(--text-color); 
 }
 
-.short-input:focus {
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 4px rgba(255, 223, 0, 0.4);
-    outline: none;
-}
-
 select { 
     min-width: 120px; 
     height: 35px; 
     background: var(--input-bg); 
     color: var(--text-color); 
     border: 1px solid var(--border-color); 
+    cursor: pointer;
 }
 
-select:focus {
-    border-color: var(--secondary-color);
-    box-shadow: 0 0 4px rgba(255, 223, 0, 0.4);
-    outline: none;
-}
-
+/* Botões com cores temáticas */
 .secondary-button { 
     padding: 5px 12px; 
     font-size: 0.85em; 
     cursor: pointer; 
     background: transparent; 
-    border: 1px solid var(--primary-color); 
-    color: var(--primary-color); 
+    border: 2px solid var(--brasil-verde); 
+    color: var(--brasil-verde); 
     border-radius: 4px; 
-    transition: all 0.2s ease;
+    font-weight: bold;
 }
 
 .secondary-button:hover {
-    background: var(--primary-color);
-    color: white;
+    background: var(--brasil-verde);
+    color: var(--brasil-branco);
+    transition: all 0.3s ease;
 }
 
 .btn-success { 
-    background: var(--success-color); 
-    color: white; 
+    background: var(--brasil-verde); 
+    color: var(--brasil-branco); 
     border: none; 
+    font-weight: bold;
 }
 
 .btn-success:hover {
-    filter: brightness(1.1);
+    background: #007a29;
+    transition: all 0.3s ease;
 }
 
 .btn-pdf { 
-    background: var(--pdf-color); 
-    color: white; 
+    background: var(--brasil-azul); 
+    color: var(--brasil-branco); 
     border: none; 
+    font-weight: bold;
 }
 
 .btn-pdf:hover {
-    filter: brightness(1.1);
+    background: #001a4d;
+    transition: all 0.3s ease;
 }
 
+/* Tabela com identidade visual Brasil */
 table { 
     width: 100%; 
     border-collapse: collapse; 
     margin-top: 15px; 
+    border: 2px solid var(--brasil-verde);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    z-index: 3;
+    background: var(--container-bg-color);
 }
 
 th, td { 
     border: 1px solid var(--border-color); 
-    padding: 8px; 
+    padding: 10px 8px; 
     text-align: left; 
     font-size: 0.85em; 
 }
 
 th { 
     background: var(--table-header-bg); 
-    color: var(--primary-color);
+    color: var(--brasil-azul);
     font-weight: bold;
-    border-bottom: 2px solid var(--secondary-color);
 }
 
 tr:nth-child(even) {
-    background: rgba(0, 156, 59, 0.03); /* Linhas pares com tom verde suave */
+    background: rgba(0, 156, 59, 0.05);
 }
 
 tr:hover {
-    background: rgba(255, 223, 0, 0.08); /* Destaque amarelo ao passar o mouse */
+    background: rgba(255, 223, 0, 0.15);
+    transition: background 0.2s ease;
 }
 
 .obs-input { 
@@ -184,9 +205,9 @@ tr:hover {
 }
 
 .obs-input:focus { 
-    border-color: var(--secondary-color); 
+    border-color: var(--brasil-verde); 
     outline: none; 
-    box-shadow: 0 0 3px var(--secondary-color); 
+    box-shadow: 0 0 5px rgba(0, 156, 59, 0.5); 
 }
 
 .input-group { 
@@ -205,9 +226,9 @@ tr:hover {
 }
 
 .input-group input:focus { 
-    border-color: var(--secondary-color); 
+    border-color: var(--brasil-verde); 
     outline: none; 
-    box-shadow: 0 0 3px var(--secondary-color); 
+    box-shadow: 0 0 5px rgba(0, 156, 59, 0.5); 
 }
 
 .input-group input[type="time"] { 
@@ -220,41 +241,36 @@ tr:hover {
     font-size: 0.8em; 
 }
 
-.lost-atraso { 
-    color: #e53935; /* Vermelho mantido para alerta */
-}
-
-.lost-adiantamento { 
-    color: #f57c00; /* Laranja mantido para aviso */
-}
+.lost-atraso { color: #dc3545; }
+.lost-adiantamento { color: #f59e0b; }
 
 .passed-time-dot { 
     height: 10px; 
     width: 10px; 
-    background: #e53935; 
+    background: #dc3545; 
     border-radius: 50%; 
     display: none; 
     margin-left: 5px; 
 }
 
-.passed-time-dot.visible { 
-    display: inline-block; 
-}
+.passed-time-dot.visible { display: inline-block; }
 
+/* Botão de tema com estilo da bandeira */
 #theme-toggle { 
     cursor: pointer; 
-    padding: 5px 15px; 
+    padding: 6px 18px; 
     border-radius: 20px; 
-    border: 1px solid var(--secondary-color); 
-    background: none; 
-    color: var(--primary-color); 
+    border: 2px solid var(--brasil-amarelo); 
+    background: var(--brasil-verde); 
+    color: var(--brasil-branco); 
     font-weight: bold;
-    transition: all 0.2s ease;
 }
 
 #theme-toggle:hover {
-    background: var(--secondary-color);
-    color: var(--accent-color);
+    background: var(--brasil-amarelo);
+    color: var(--brasil-azul);
+    border-color: var(--brasil-verde);
+    transition: all 0.3s ease;
 }
 
 #clear-data-button { 
@@ -264,9 +280,25 @@ tr:hover {
     padding: 8px 12px; 
     border-radius: 4px; 
     cursor: pointer; 
-    transition: filter 0.2s ease;
+    font-weight: bold;
 }
 
 #clear-data-button:hover {
-    filter: brightness(1.1);
+    background: #b02a37;
+    transition: all 0.3s ease;
+}
+
+/* AJUSTE NO MODO ESCURO PARA AS BANDEIRAS */
+body.dark-mode {
+    background-image: 
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'), 
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png');
+    background-position: 
+        left 20px top 50%, 
+        right 20px top 50%;
+    background-repeat: no-repeat;
+    background-size: 120px auto;
+    background-attachment: fixed;
+    /* Deixa a bandeira um pouco mais clara para aparecer no fundo escuro */
+    filter: brightness(1.2);
 }
