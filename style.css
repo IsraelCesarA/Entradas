@@ -37,16 +37,63 @@ body {
     background-color: var(--bg-color); 
     color: var(--text-color); 
     padding: 10px; 
-    /* AGORA SIM: APENAS 1 BANDEIRA DE CADA LADO, NO LUGAR DAS SETAS */
+
+    /* 🇧🇷 VÁRIAS MINI BANDEIRAS NO LUGAR DAS SETAS 🇧🇷 */
     background-image: 
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'), /* Bandeira ESQUERDA */
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'); /* Bandeira DIREITA */
+        /* LADO ESQUERDO - 5 mini bandeiras no lugar da seta esquerda */
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+
+        /* LADO DIREITO - 5 mini bandeiras no lugar da seta direita */
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png');
+
+    /* POSICIONAMENTO: todas alinhadas verticalmente no lugar exato das setas */
     background-position: 
-        left 30px center,   /* Mesmo lugar da seta esquerda */
-        right 30px center;  /* Mesmo lugar da seta direita */
-    background-repeat: no-repeat; /* NÃO REPETE NADA */
-    background-size: 80px auto; /* Tamanho igualzinho das setas */
+        left 15px top 30%,   /* Esq 1 */
+        left 15px top 40%,   /* Esq 2 */
+        left 15px top 50%,   /* Esq 3 - CENTRO (lugar original da seta) */
+        left 15px top 60%,   /* Esq 4 */
+        left 15px top 70%,   /* Esq 5 */
+
+        right 15px top 30%,  /* Dir 1 */
+        right 15px top 40%,  /* Dir 2 */
+        right 15px top 50%,  /* Dir 3 - CENTRO (lugar original da seta) */
+        right 15px top 60%,  /* Dir 4 */
+        right 15px top 70%;  /* Dir 5 */
+
+    background-repeat: no-repeat; /* Não repete fora desse ponto */
+    background-size: 22px auto; /* TAMANHO MINI: do tamanho das antigas setas */
+    background-attachment: fixed; /* Fixa ao rolar a página */
+}
+
+/* No modo escuro, deixa as bandeirinhas mais visíveis */
+body.dark-mode {
+    background-image: 
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png');
+    background-position: 
+        left 15px top 30%, left 15px top 40%, left 15px top 50%, left 15px top 60%, left 15px top 70%,
+        right 15px top 30%, right 15px top 40%, right 15px top 50%, right 15px top 60%, right 15px top 70%;
+    background-repeat: no-repeat;
+    background-size: 22px auto;
     background-attachment: fixed;
+    filter: brightness(1.3); /* Fica mais brilhante no fundo escuro */
 }
 
 .container { 
@@ -58,21 +105,7 @@ body {
     box-shadow: 0 2px 8px rgba(0, 156, 59, 0.2); 
     border: 3px solid var(--brasil-amarelo);
     position: relative;
-    z-index: 2;
-}
-
-/* Modo escuro - bandeira com brilho para aparecer bem */
-body.dark-mode {
-    background-image: 
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'), 
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png');
-    background-position: 
-        left 30px center, 
-        right 30px center;
-    background-repeat: no-repeat;
-    background-size: 80px auto;
-    background-attachment: fixed;
-    filter: brightness(1.15);
+    z-index: 2; /* Garante que o conteúdo fique por cima, as bandeiras só nas laterais */
 }
 
 .main-header { 
