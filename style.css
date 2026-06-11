@@ -37,15 +37,15 @@ body {
     background-color: var(--bg-color); 
     color: var(--text-color); 
     padding: 10px; 
-    /* BANDEIRAS NO LUGAR DAS SETAS */
+    /* AGORA SIM: APENAS 1 BANDEIRA DE CADA LADO, NO LUGAR DAS SETAS */
     background-image: 
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'), /* Bandeira esquerda */
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'); /* Bandeira direita */
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'), /* Bandeira ESQUERDA */
+        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'); /* Bandeira DIREITA */
     background-position: 
-        left 30px center, 
-        right 30px center;
-    background-repeat: no-repeat;
-    background-size: 80px auto; /* Tamanho igual ao das setas */
+        left 30px center,   /* Mesmo lugar da seta esquerda */
+        right 30px center;  /* Mesmo lugar da seta direita */
+    background-repeat: no-repeat; /* NÃO REPETE NADA */
+    background-size: 80px auto; /* Tamanho igualzinho das setas */
     background-attachment: fixed;
 }
 
