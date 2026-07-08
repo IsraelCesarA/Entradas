@@ -1,16 +1,15 @@
 :root {
-    /* 🎨 Paleta Minimalista Profissional */
-    --cor-principal: #334155;       /* Cinza azulado */
-    --cor-secundaria: #60A5FA;      /* Azul suave */
-    --cor-destaque: #10B981;        /* Verde discreto */
-    --cor-texto-principal: #1E293B; /* Texto principal */
-    --cor-texto-secundario: #64748B;/* Texto secundário */
-    --cor-fundo: #F8FAFC;           /* Fundo geral */
-    --cor-container: #FFFFFF;       /* Fundo da área principal */
-    --cor-borda: #E2E8F0;           /* Bordas */
-    --cor-cabecalho-tabela: #F1F5F9;/* Fundo do cabeçalho */
-    --cor-perigo: #EF4444;          /* Ações de risco */
-    --cor-pdf: #475569;             /* Botão PDF */
+    --cor-principal: #334155;
+    --cor-secundaria: #60A5FA;
+    --cor-destaque: #10B981;
+    --cor-texto-principal: #1E293B;
+    --cor-texto-secundario: #64748B;
+    --cor-fundo: #F8FAFC;
+    --cor-container: #FFFFFF;
+    --cor-borda: #E2E8F0;
+    --cor-cabecalho-tabela: #F1F5F9;
+    --cor-perigo: #EF4444;
+    --cor-pdf: #475569;
 }
 
 body.dark-mode {
@@ -76,7 +75,7 @@ body {
     gap: 12px; 
     align-items: center; 
     padding: 12px; 
-    border-bottom: 1px solid var(--cor-borda); 
+    border: 1px solid var(--cor-borda); 
     background: rgba(100, 116, 139, 0.05);
     border-radius: 6px;
 }
