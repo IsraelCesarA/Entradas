@@ -1,94 +1,173 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Programação Diária - GIST</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Controle de Pontos</title>
+    <style>
+        :root {
+            /* 🎨 Paleta Minimalista Profissional */
+            --cor-principal: #334155;
+            --cor-secundaria: #60A5FA;
+            --cor-destaque: #10B981;
+            --cor-texto-principal: #1E293B;
+            --cor-texto-secundario: #64748B;
+            --cor-fundo: #F8FAFC;
+            --cor-container: #FFFFFF;
+            --cor-borda: #E2E8F0;
+            --cor-cabecalho-tabela: #F1F5F9;
+            --cor-perigo: #EF4444;
+            --cor-pdf: #475569;
+        }
+
+        body.dark-mode {
+            --cor-principal: #94A3B8;
+            --cor-secundaria: #7DD3FC;
+            --cor-destaque: #34D399;
+            --cor-texto-principal: #E2E8F0;
+            --cor-texto-secundario: #94A3B8;
+            --cor-fundo: #0F172A;
+            --cor-container: #1E293B;
+            --cor-borda: #334155;
+            --cor-cabecalho-tabela: #273449;
+            --cor-perigo: #F87171;
+            --cor-pdf: #94A3B8;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
+            background-color: var(--cor-fundo); 
+            color: var(--cor-texto-principal); 
+            padding: 10px; 
+            line-height: 1.5;
+            background-image: none; /* Sem bandeiras/setas */
+        }
+
+        .container { 
+            max-width: 1400px; 
+            margin: auto; 
+            background: var(--cor-container); 
+            padding: 24px; 
+            border-radius: 10px; 
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); 
+            border: 1px solid var(--cor-borda);
+            position: relative;
+            z-index: 2;
+        }
+
+        .main-header { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            margin-bottom: 24px; 
+            border-bottom: 2px solid var(--cor-secundaria);
+            padding-bottom: 12px;
+        }
+
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 16px; 
+            border: 1px solid var(--cor-borda);
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--cor-container);
+        }
+
+        th, td { 
+            border: 1px solid var(--cor-borda); 
+            padding: 10px 12px; 
+            text-align: left; 
+            font-size: 0.9em; 
+        }
+
+        th { 
+            background: var(--cor-cabecalho-tabela); 
+            color: var(--cor-principal);
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background: rgba(100, 116, 139, 0.03);
+        }
+
+        tr:hover {
+            background: rgba(96, 165, 250, 0.08);
+        }
+
+        .loading {
+            color: var(--cor-secundaria);
+            font-style: italic;
+            padding: 1rem;
+        }
+    </style>
 </head>
 <body>
 
 <div class="container">
     <header class="main-header">
-        <h1>Consulta de Programação Diária</h1>
-        <button id="theme-toggle">Alternar Tema</button>
+        <h1>Controle de Postos</h1>
+        <button id="theme-toggle">Modo Escuro</button>
     </header>
 
-    <div class="controls">
-        <div class="file-controls">
-            <label for="file-input">Carregar Arquivo (Excel/CSV):</label>
-            <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
-            <button id="clear-data-button">Limpar Dados</button>
-            
-            <div class="export-controls">
-                <button id="export-excel" class="secondary-button btn-success">Exportar Excel</button>
-                <button id="export-pdf" class="secondary-button btn-pdf">Exportar PDF</button>
-            </div>
-            <p class="help-text">Carregue um arquivo para começar.</p>
-        </div>
-        
-        <div id="filter-section" class="filter-container" style="display:none;">
-            <div class="filter-group">
-                <label for="lines-input">Linha:</label>
-                <input type="text" id="lines-input" placeholder="Ex: 038" class="short-input">
-                <div class="select-with-button">
-                    <select id="lines-filter" multiple></select>
-                    <button id="select-all-lines" class="secondary-button">Todas</button>
-                </div>
-            </div>
-    
-            <div class="filter-group">
-                <label for="table-input">Tabela:</label>
-                <input type="text" id="table-input" placeholder="Ex: 1" class="short-input">
-                <div class="select-with-button">
-                    <select id="table-filter" multiple></select>
-                    <button id="select-all-tables" class="secondary-button">Todas</button>
-                </div>
-
-                <label for="posto-input">Posto:</label>
-                <input type="text" id="posto-input" placeholder="Buscar..." class="short-input">
-                <div class="select-with-button">
-                    <select id="posto-filter" multiple></select>
-                    <button id="select-all-postos" class="secondary-button">Todos</button>
-                </div>
-            </div>
-
-            <div class="filter-group">
-                <label for="start-time-filter">De:</label>
-                <input type="time" id="start-time-filter">
-                <label for="end-time-filter">Até:</label>
-                <input type="time" id="end-time-filter">
-            </div>
-        </div>
-    </div>
-    
-    <div id="selected-filters-display"></div>
-
-    <div id="loading-message" class="callout" style="display:none; text-align:center;">Processando...</div>
-    
-    <div id="results-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Linha</th>
-                    <th>Tabela</th>
-                    <th>Empresa</th>
-                    <th>Passagem</th>
-                    <th>Posto</th>
-                    <th>Início</th>
-                    <th>Horário Real</th>
-                    <th>Obs</th>
-                </tr>
-            </thead>
-            <tbody id="data-table-body"></tbody>
-        </table>
-    </div>
+    <table id="tabelaPostos">
+        <thead>
+            <tr>
+                <th>Número</th>
+                <th>Nome Fantasia</th>
+                <th>Descrição Completa</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Raio (m)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="6" class="loading">Carregando dados dos postos...</td></tr>
+        </tbody>
+    </table>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
-<script src="script.js"></script>
+<script>
+// 🚀 Consumir a API e preencher a tabela
+async function carregarPostos() {
+    try {
+        const resposta = await fetch('http://gistapis.etufor.ce.gov.br:8081/api/postoControle');
+        if (!resposta.ok) throw new Error('Erro ao buscar dados');
+        
+        const postos = await resposta.json();
+        const corpoTabela = document.querySelector('#tabelaPostos tbody');
+        corpoTabela.innerHTML = ''; // limpa mensagem de carregamento
+
+        // Adiciona cada posto na tabela
+        postos.forEach(posto => {
+            const linha = document.createElement('tr');
+            linha.innerHTML = `
+                <td>${posto.numero}</td>
+                <td><strong>${posto.nomeFantasia || '-'}</strong></td>
+                <td>${posto.nome}</td>
+                <td>${posto.latitude.toFixed(6)}</td>
+                <td>${posto.longitude.toFixed(6)}</td>
+                <td>${posto.raio} m</td>
+            `;
+            corpoTabela.appendChild(linha);
+        });
+
+    } catch (erro) {
+        document.querySelector('#tabelaPostos tbody').innerHTML = 
+            `<tr><td colspan="6" style="color: var(--cor-perigo);">Erro ao carregar dados: ${erro.message}</td></tr>`;
+        console.error(erro);
+    }
+}
+
+// Botão de alternar modo escuro/claro
+document.getElementById('theme-toggle').addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    this.textContent = document.body.classList.contains('dark-mode') ? 'Modo Claro' : 'Modo Escuro';
+});
+
+// Carrega os dados ao abrir a página
+window.addEventListener('load', carregarPostos);
+</script>
 
 </body>
 </html>
