@@ -6,10 +6,10 @@
 body.dark-mode {
     --bg-color: #121212; --container-bg-color: #302c2c; --text-color: #e0e0e0;
     --border-color: #444; --primary-color: #009cff; --input-bg: #333;
-    --table-header-bg: #2c2c2c;
+    --table-header-bg: #1d6877;
 }
 body { font-family: sans-serif; background: var(--bg-color); color: var(--text-color); padding: 20px; }
-.container { max-width: 1200px; margin: auto; background: var(--container-bg-color); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.container { max-width: 1380px; margin: auto; background: var(--container-bg-color); padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
 .main-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
 .controls { display: flex; flex-direction: column; gap: 15px; }
 .filter-group { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 10px; border-bottom: 1px solid var(--border-color); }
