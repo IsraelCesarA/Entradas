@@ -23,22 +23,28 @@ document.addEventListener('DOMContentLoaded', () => {
     let updateInterval;
     let nomesPostos = JSON.parse(localStorage.getItem('gistNomesPostos')) || {};
 
-    // Botão de Carregar Postos (Consulta API)
+    // Botão de Carregar Postos (Consulta API via Proxy)
     loadPostosButton.addEventListener('click', async () => {
         const originalText = loadPostosButton.innerText;
         loadPostosButton.innerText = 'Carregando...';
         loadPostosButton.disabled = true;
 
         try {
-            const response = await fetch('https://gistapis.etufor.ce.gov.br:8081/api/postoControle');
-            if (!response.ok) throw new Error('Falha API Postos');
+            // URL original da API
+            const apiUrl = 'http://gistapis.etufor.ce.gov.br:8081/api/postoControle';
+            
+            // Usando um proxy para contornar o bloqueio de HTTPS do GitHub Pages
+            const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(apiUrl);
+
+            const response = await fetch(proxyUrl);
+            
+            if (!response.ok) throw new Error('Falha API Postos através do proxy');
             const data = await response.json();
             
-            // Log para debug no console (F12) caso os nomes não apareçam
             console.log("FORMATO DO POSTO NA API:", data[0]); 
             
             data.forEach(posto => {
-                // Tenta encontrar o ID e o Nome em várias propriedades possíveis que a API possa retornar
+                // Tenta encontrar o ID e o Nome em várias propriedades possíveis
                 const idPosto = String(posto.id || posto.codigo || posto.Id || posto.codPosto || posto.ID_POSTO || posto.numero); 
                 const nome = posto.nomeFantasia || posto.nome || posto.NomeFantasia || posto.Descricao || posto.descricao || posto.NOM_POSTO;
                 
@@ -58,7 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error('Erro:', error);
-            alert('Erro ao carregar os nomes dos postos da API. Verifique a rede ou CORS.');
+            alert('Erro ao carregar os nomes dos postos. Verifique a rede ou o serviço de proxy.');
             loadPostosButton.innerText = 'Erro';
         }
 
@@ -272,7 +278,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${item.Tabela}</td>
                 <td>${item.Empresa}</td>
                 <td>${item.TipoPassagem}</td>
-                <td>${item.PostoControle}${nomePostoDisplay}</td> <td>${item.GOP_PDH_HORARIO_INICIO} <span class="passed-time-dot" data-schedule-time="${item.GOP_PDH_HORARIO_INICIO}" data-item-id="${item.id}"></span><span id="lost-msg-${item.id}" class="lost-entry"></span></td>
+                <td>${item.PostoControle}${nomePostoDisplay}</td>
+                <td>${item.GOP_PDH_HORARIO_INICIO} <span class="passed-time-dot" data-schedule-time="${item.GOP_PDH_HORARIO_INICIO}" data-item-id="${item.id}"></span><span id="lost-msg-${item.id}" class="lost-entry"></span></td>
                 <td><input type="text" maxlength="5" id="veiculo-${item.id}" value="${val.veiculo || ''}" class="v-input table-input"></td>
                 <td><input type="time" id="real-time-${item.id}" value="${val.realTime || ''}" class="t-input table-input"></td>
                 <td><input type="text" id="obs-${item.id}" value="${val.observacao || ''}" class="obs-input table-input" placeholder="Obs..."></td>`;
