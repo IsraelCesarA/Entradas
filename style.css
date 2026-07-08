@@ -1,20 +1,19 @@
 :root {
     /* 🎨 Paleta Minimalista Profissional */
-    --cor-principal: #334155;       /* Cinza azulado — confiança e destaque */
-    --cor-secundaria: #60A5FA;      /* Azul suave — botões e detalhes */
-    --cor-destaque: #10B981;        /* Verde discreto — confirmações e sucesso */
-    --cor-texto-principal: #1E293B; /* Texto escuro, suave (não preto puro) */
-    --cor-texto-secundario: #64748B;/* Textos menos importantes */
-    --cor-fundo: #F8FAFC;           /* Fundo geral muito claro */
+    --cor-principal: #334155;       /* Cinza azulado */
+    --cor-secundaria: #60A5FA;      /* Azul suave */
+    --cor-destaque: #10B981;        /* Verde discreto */
+    --cor-texto-principal: #1E293B; /* Texto principal */
+    --cor-texto-secundario: #64748B;/* Texto secundário */
+    --cor-fundo: #F8FAFC;           /* Fundo geral */
     --cor-container: #FFFFFF;       /* Fundo da área principal */
-    --cor-borda: #E2E8F0;           /* Bordas leves */
-    --cor-cabecalho-tabela: #F1F5F9;/* Fundo do cabeçalho da tabela */
-    --cor-perigo: #EF4444;          /* Avisos, exclusões */
+    --cor-borda: #E2E8F0;           /* Bordas */
+    --cor-cabecalho-tabela: #F1F5F9;/* Fundo do cabeçalho */
+    --cor-perigo: #EF4444;          /* Ações de risco */
     --cor-pdf: #475569;             /* Botão PDF */
 }
 
 body.dark-mode {
-    /* 🎨 Versão Modo Escuro — também minimalista */
     --cor-principal: #94A3B8;
     --cor-secundaria: #7DD3FC;
     --cor-destaque: #34D399;
@@ -34,36 +33,8 @@ body {
     color: var(--cor-texto-principal); 
     padding: 10px; 
     line-height: 1.5;
-
-    /* 🇧🇷 Mantém as mini bandeiras nas laterais */
-    background-image: 
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png');
-
-    background-position: 
-        left 12px top 120px, left 12px top 170px, left 12px top 220px, left 12px top 270px, left 12px top 320px,
-        right 12px top 120px, right 12px top 170px, right 12px top 220px, right 12px top 270px, right 12px top 320px;
-    background-repeat: no-repeat;
-    background-size: 22px auto;
-    background-attachment: fixed;
-}
-
-/* Esconde setas ou ícones antigos */
-body::before, body::after,
-.side-icon, .arrow-icon, [class*="arrow"], [class*="seta"],
-div[style*="position: fixed"], div[style*="position: absolute"] {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
+    background-image: none;
+    margin: 0;
 }
 
 .container { 
@@ -74,8 +45,6 @@ div[style*="position: fixed"], div[style*="position: absolute"] {
     border-radius: 10px; 
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); 
     border: 1px solid var(--cor-borda);
-    position: relative;
-    z-index: 2;
 }
 
 .main-header { 
@@ -91,6 +60,7 @@ div[style*="position: fixed"], div[style*="position: absolute"] {
     display: flex; 
     flex-direction: column; 
     gap: 16px; 
+    margin-bottom: 20px;
 }
 
 .file-controls { 
@@ -98,12 +68,6 @@ div[style*="position: fixed"], div[style*="position: absolute"] {
     flex-wrap: wrap; 
     gap: 12px; 
     align-items: center; 
-}
-
-.export-controls { 
-    display: flex; 
-    gap: 10px; 
-    margin-left: 10px; 
 }
 
 .filter-group { 
@@ -138,7 +102,6 @@ select {
     cursor: pointer;
 }
 
-/* Botões */
 .secondary-button { 
     padding: 6px 14px; 
     font-size: 0.9em; 
@@ -161,6 +124,10 @@ select {
     color: #FFFFFF; 
     border: none; 
     font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
 }
 
 .btn-success:hover {
@@ -172,22 +139,22 @@ select {
     color: #FFFFFF; 
     border: none; 
     font-weight: 500;
+    padding: 6px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s ease;
 }
 
 .btn-pdf:hover {
     background: #334155;
 }
 
-/* Tabela */
 table { 
     width: 100%; 
     border-collapse: collapse; 
-    margin-top: 16px; 
     border: 1px solid var(--cor-borda);
     border-radius: 6px;
     overflow: hidden;
-    position: relative;
-    z-index: 3;
     background: var(--cor-container);
 }
 
@@ -212,8 +179,21 @@ tr:hover {
     background: rgba(96, 165, 250, 0.08);
 }
 
+.loading {
+    color: var(--cor-secundaria);
+    font-style: italic;
+    text-align: center;
+    padding: 2rem;
+}
+
+.erro {
+    color: var(--cor-perigo);
+    text-align: center;
+    padding: 2rem;
+}
+
 .obs-input { 
-    width: 180px; 
+    width: 160px; 
     padding: 5px 8px; 
     border: 1px solid var(--cor-borda); 
     border-radius: 4px; 
@@ -226,51 +206,6 @@ tr:hover {
     outline: none; 
     box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2); 
 }
-
-.input-group { 
-    display: flex; 
-    gap: 6px; 
-    align-items: center; 
-}
-
-.input-group input.v-input { 
-    width: 55px; 
-    padding: 5px 8px; 
-    background: var(--cor-container); 
-    color: var(--cor-texto-principal); 
-    border: 1px solid var(--cor-borda); 
-    border-radius: 4px; 
-}
-
-.input-group input:focus { 
-    border-color: var(--cor-secundaria); 
-    outline: none; 
-    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2); 
-}
-
-.input-group input[type="time"] { 
-    width: 90px; 
-}
-
-.lost-entry { 
-    font-weight: 500; 
-    margin-left: 6px; 
-    font-size: 0.85em; 
-}
-
-.lost-atraso { color: var(--cor-perigo); }
-.lost-adiantamento { color: #F59E0B; }
-
-.passed-time-dot { 
-    height: 10px; 
-    width: 10px; 
-    background: var(--cor-perigo); 
-    border-radius: 50%; 
-    display: none; 
-    margin-left: 6px; 
-}
-
-.passed-time-dot.visible { display: inline-block; }
 
 #theme-toggle { 
     cursor: pointer; 
@@ -292,10 +227,11 @@ tr:hover {
     background: var(--cor-perigo); 
     color: #FFFFFF; 
     border: none; 
-    padding: 8px 12px; 
+    padding: 6px 14px; 
     border-radius: 4px; 
     cursor: pointer; 
     font-weight: 500;
+    transition: background 0.2s ease;
 }
 
 #clear-data-button:hover {
