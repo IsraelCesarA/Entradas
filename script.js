@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('file-input');
+    const loadPostosButton = document.getElementById('load-postos-button');
     const linesInput = document.getElementById('lines-input');
     const tableInput = document.getElementById('table-input');
     const postoInput = document.getElementById('posto-input');
@@ -12,7 +13,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const selectedFiltersDisplay = document.getElementById('selected-filters-display');
     const dataTableBody = document.getElementById('data-table-body');
     const loadingMessage = document.getElementById('loading-message');
-    const errorMessage = document.getElementById('error-message');
     const themeToggleButton = document.getElementById('theme-toggle');
     const clearDataButton = document.getElementById('clear-data-button');
     const filterSection = document.getElementById('filter-section');
@@ -21,6 +21,85 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let allData = [];
     let updateInterval;
+    let nomesPostos = JSON.parse(localStorage.getItem('gistNomesPostos')) || {};
+
+    // Botão de Carregar Postos (Consulta API)
+    loadPostosButton.addEventListener('click', async () => {
+        const originalText = loadPostosButton.innerText;
+        loadPostosButton.innerText = 'Carregando...';
+        loadPostosButton.disabled = true;
+
+        try {
+            const response = await fetch('http://gistapis.etufor.ce.gov.br:8081/api/postoControle');
+            if (!response.ok) throw new Error('Falha API Postos');
+            const data = await response.json();
+            
+            // Log para debug no console (F12) caso os nomes não apareçam
+            console.log("FORMATO DO POSTO NA API:", data[0]); 
+            
+            data.forEach(posto => {
+                // Tenta encontrar o ID e o Nome em várias propriedades possíveis que a API possa retornar
+                const idPosto = String(posto.id || posto.codigo || posto.Id || posto.codPosto || posto.ID_POSTO || posto.numero); 
+                const nome = posto.nomeFantasia || posto.nome || posto.NomeFantasia || posto.Descricao || posto.descricao || posto.NOM_POSTO;
+                
+                if (idPosto && idPosto !== "undefined") {
+                    nomesPostos[idPosto] = nome;
+                }
+            });
+
+            localStorage.setItem('gistNomesPostos', JSON.stringify(nomesPostos));
+            loadPostosButton.innerText = 'Concluído!';
+            
+            // Atualiza a tabela imediatamente se já houver dados do Excel carregados
+            if (allData.length > 0) {
+                populateFilters(allData);
+                updateSelectedFiltersDisplay();
+                renderTable(allData);
+            }
+        } catch (error) {
+            console.error('Erro:', error);
+            alert('Erro ao carregar os nomes dos postos da API. Verifique a rede ou CORS.');
+            loadPostosButton.innerText = 'Erro';
+        }
+
+        setTimeout(() => {
+            loadPostosButton.innerText = originalText;
+            loadPostosButton.disabled = false;
+        }, 3000);
+    });
+
+    // Evento de Carregamento de Arquivo Excel/CSV
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        loadingMessage.style.display = 'block';
+        const reader = new FileReader();
+        
+        reader.onload = (evt) => {
+            try {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                
+                allData = json.map((row, idx) => ({
+                    id: idx,
+                    Linha: String(row.GOP_PDH_LINHA || ''),
+                    Tabela: String(row.GOP_PDH_TABELA || ''),
+                    Empresa: String(row.GOP_PDH_EMPRESA || ''),
+                    PostoControle: String(row.GOP_PDH_POSTO_CONTROLE_INICIAL || ''),
+                    GOP_PDH_HORARIO_INICIO: String(row.GOP_PDH_HORARIO_INICIO || '').slice(-5),
+                    TipoPassagem: String(row.GOP_PDH_COD_PASSAGEM_INICIAL || '')
+                })).filter(i => /^\d{2}:\d{2}$/.test(i.GOP_PDH_HORARIO_INICIO));
+                
+                localStorage.setItem('gistFileData', JSON.stringify(allData));
+                window.location.reload();
+            } catch (err) { 
+                alert('Erro ao processar o arquivo. Verifique se o formato está correto.'); 
+                loadingMessage.style.display = 'none'; 
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    });
 
     function checkTime(itemId, scheduledTimeStr) {
         const realTimeInput = document.getElementById(`real-time-${itemId}`);
@@ -54,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentTheme = localStorage.getItem('theme');
         document.body.classList.toggle('dark-mode', currentTheme === 'dark');
         const savedData = localStorage.getItem('gistFileData');
+        
         if (savedData) {
             allData = JSON.parse(savedData);
             filterSection.style.display = 'flex';
@@ -70,7 +150,15 @@ document.addEventListener('DOMContentLoaded', () => {
             el.innerHTML = '';
             items.forEach(val => {
                 const opt = document.createElement('option');
-                opt.value = val; opt.textContent = val;
+                opt.value = val; 
+                
+                // Exibe o número e o nome do posto no filtro, se o nome estiver mapeado
+                if (key === 'PostoControle' && nomesPostos[val]) {
+                    opt.textContent = `${val} - ${nomesPostos[val]}`;
+                } else {
+                    opt.textContent = val;
+                }
+                
                 el.appendChild(opt);
             });
         };
@@ -128,35 +216,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     clearDataButton.addEventListener('click', () => {
         if (confirm('Limpar todos os dados?')) {
-            localStorage.clear();
+            localStorage.removeItem('gistFileData');
+            localStorage.removeItem('gistUserInputs');
             window.location.reload();
         }
-    });
-
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        loadingMessage.style.display = 'block';
-        const reader = new FileReader();
-        reader.onload = (evt) => {
-            try {
-                const data = new Uint8Array(evt.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-                allData = json.map((row, idx) => ({
-                    id: idx,
-                    Linha: String(row.GOP_PDH_LINHA || ''),
-                    Tabela: String(row.GOP_PDH_TABELA || ''),
-                    Empresa: String(row.GOP_PDH_EMPRESA || ''),
-                    PostoControle: String(row.GOP_PDH_POSTO_CONTROLE_INICIAL || ''),
-                    GOP_PDH_HORARIO_INICIO: String(row.GOP_PDH_HORARIO_INICIO || '').slice(-5),
-                    TipoPassagem: String(row.GOP_PDH_COD_PASSAGEM_INICIAL || '')
-                })).filter(i => /^\d{2}:\d{2}$/.test(i.GOP_PDH_HORARIO_INICIO));
-                localStorage.setItem('gistFileData', JSON.stringify(allData));
-                window.location.reload();
-            } catch (err) { alert('Erro no arquivo'); loadingMessage.style.display = 'none'; }
-        };
-        reader.readAsArrayBuffer(file);
     });
 
     function updateSelectedFiltersDisplay() {
@@ -194,23 +257,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }).sort((a, b) => a.GOP_PDH_HORARIO_INICIO.localeCompare(b.GOP_PDH_HORARIO_INICIO));
 
         const inputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
-        filtered.forEach((item, index) => {
+        
+        filtered.forEach((item) => {
             const tr = document.createElement('tr');
-            const val = inputs[item.id] || { veiculo: '', realTime: '' };
+            const val = inputs[item.id] || { veiculo: '', realTime: '', observacao: '' };
+            
+            // Define o nome de exibição: "Número - Nome" se existir, se não, apenas o "Número"
+            const nomePostoDisplay = nomesPostos[item.PostoControle] 
+                ? ` - ${nomesPostos[item.PostoControle]}` 
+                : '';
+
             tr.innerHTML = `
-                <td>${item.Linha}</td><td>${item.Tabela}</td><td>${item.Empresa}</td>
-                <td>${item.TipoPassagem}</td><td>${item.PostoControle}</td>
-                <td>${item.GOP_PDH_HORARIO_INICIO} <span class="passed-time-dot" data-schedule-time="${item.GOP_PDH_HORARIO_INICIO}" data-item-id="${item.id}"></span><span id="lost-msg-${item.id}" class="lost-entry"></span></td>
-                <td><div class="input-group">
-                    <input type="text" maxlength="5" id="veiculo-${item.id}" value="${val.veiculo}" class="v-input">
-                    <input type="time" id="real-time-${item.id}" value="${val.realTime}" class="t-input">
-                </div></td>`;
+                <td>${item.Linha}</td>
+                <td>${item.Tabela}</td>
+                <td>${item.Empresa}</td>
+                <td>${item.TipoPassagem}</td>
+                <td>${item.PostoControle}${nomePostoDisplay}</td> <td>${item.GOP_PDH_HORARIO_INICIO} <span class="passed-time-dot" data-schedule-time="${item.GOP_PDH_HORARIO_INICIO}" data-item-id="${item.id}"></span><span id="lost-msg-${item.id}" class="lost-entry"></span></td>
+                <td><input type="text" maxlength="5" id="veiculo-${item.id}" value="${val.veiculo || ''}" class="v-input table-input"></td>
+                <td><input type="time" id="real-time-${item.id}" value="${val.realTime || ''}" class="t-input table-input"></td>
+                <td><input type="text" id="obs-${item.id}" value="${val.observacao || ''}" class="obs-input table-input" placeholder="Obs..."></td>`;
+            
             dataTableBody.appendChild(tr);
             
             const vIn = tr.querySelector(`#veiculo-${item.id}`);
             const rIn = tr.querySelector(`#real-time-${item.id}`);
+            const oIn = tr.querySelector(`#obs-${item.id}`);
             
-            // Navegação com ENTER
+            // Navegação fluida com a tecla "Enter"
             vIn.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
@@ -221,7 +294,13 @@ document.addEventListener('DOMContentLoaded', () => {
             rIn.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
-                    // Procura o próximo input de veículo na tabela
+                    oIn.focus();
+                }
+            });
+
+            oIn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
                     const nextRow = tr.nextElementSibling;
                     if (nextRow) {
                         const nextVIn = nextRow.querySelector('.v-input');
@@ -231,13 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const updateRow = () => {
-                inputs[item.id] = { veiculo: vIn.value, realTime: rIn.value };
+                inputs[item.id] = { veiculo: vIn.value, realTime: rIn.value, observacao: oIn.value };
                 localStorage.setItem('gistUserInputs', JSON.stringify(inputs));
                 checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
                 updatePassedTimes();
             };
 
-            vIn.oninput = rIn.onchange = updateRow;
+            vIn.oninput = rIn.onchange = oIn.oninput = updateRow;
             if (val.realTime) checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
         });
         updatePassedTimes();
