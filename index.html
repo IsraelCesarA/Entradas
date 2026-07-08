@@ -3,54 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Postos</title>
+    <title>Consulta de Programação Diária</title>
     <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
 
 <div class="container">
     <header class="main-header">
-        <h1>Controle de Postos</h1>
-        <button id="theme-toggle">Modo Escuro</button>
+        <h1>Consulta de Programação Diária</h1>
+        <button id="theme-toggle">Alternar Tema</button>
     </header>
 
-    <div class="controls">
-        <div class="file-controls">
-            <input type="file" id="arquivo" accept=".csv, .txt">
-            <button class="secondary-button" id="carregar">Carregar Arquivo</button>
-            <button class="btn-success" id="salvar">Salvar Dados</button>
-            <button class="btn-pdf" id="exportarPdf">Exportar PDF</button>
-            <button id="clear-data-button">Limpar Tudo</button>
-        </div>
-
-        <div class="filter-group">
-            <label>Filtrar:</label>
-            <input type="text" class="short-input" id="filtroNumero" placeholder="Número">
-            <input type="text" class="short-input" id="filtroNome" placeholder="Nome">
-            <select id="filtroStatus">
-                <option value="">Todos</option>
-                <option value="ativo">Ativos</option>
-                <option value="inativo">Inativos</option>
-            </select>
-        </div>
+    <div class="file-controls">
+        <label>Carregar Arquivo (Excel/CSV):</label>
+        <input type="file" id="arquivo" accept=".csv, .txt, .xlsx">
+        <button id="clear-data-button">Limpar Dados</button>
+        <button class="btn-success">Exportar Excel</button>
+        <button class="btn-pdf">Exportar PDF</button>
+        <span class="info">Carregue um arquivo para começar.</span>
     </div>
 
-    <table id="tabelaDados">
+    <div class="filter-group">
+        <label>Linha:</label>
+        <input type="text" class="short-input" placeholder="Ex: 038">
+        <label>Tabela:</label>
+        <input type="text" class="short-input" placeholder="Ex: 1">
+        <button class="secondary-button">Todas</button>
+        <label>Posto:</label>
+        <input type="text" class="short-input" id="filtroPosto" placeholder="Buscar...">
+        <button class="secondary-button">Todos</button>
+        <label>De:</label>
+        <input type="time" class="short-input">
+        <label>Até:</label>
+        <input type="time" class="short-input">
+    </div>
+
+    <table id="tabelaPrincipal">
         <thead>
             <tr>
-                <th>Número</th>
-                <th>Posto</th>
-                <th>Nome Fantasia</th>
-                <th>Descrição</th>
-                <th>Latitude</th>
-                <th>Longitude</th>
-                <th>Raio (m)</th>
-                <th>Observações</th>
+                <th>Linha</th>
+                <th>Tabela</th>
+                <th>Empresa</th>
+                <th>Passagem</th>
+                <th>Posto</th> <!-- Coluna nova -->
+                <th>Início</th>
+                <th>Horário Real</th>
+                <th>Obs</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td colspan="8" class="loading">Carregando dados dos postos...</td>
+                <td colspan="8" class="info-centro">Carregue um arquivo ou aguarde os dados dos postos...</td>
             </tr>
         </tbody>
     </table>
