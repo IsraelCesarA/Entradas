@@ -17,9 +17,11 @@
     <div class="controls">
         <div class="file-controls">
             <label for="file-input">Carregar Arquivo (Excel/CSV):</label>
-            <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
-            <button id="clear-data-button">Limpar Dados</button>
-            <p class="help-text">Carregue um arquivo para começar.</p>
+            <input type="file" id="file-input" accept=".csv, .xlsx, .xls" class="table-input" style="padding: 4px;">
+            
+            <button id="load-postos-button" class="btn secondary-btn">Carregar Postos</button>
+            <button id="clear-data-button" class="btn danger-btn">Limpar Dados</button>
+            <p class="help-text" style="font-size: 0.85em; color: #666; margin-top: 5px;">Carregue a planilha para montar a tabela. Depois, use "Carregar Postos" para buscar os nomes na API.</p>
         </div>
         
         <div id="filter-section" class="filter-container" style="display:none;">
@@ -59,7 +61,7 @@
     
     <div id="selected-filters-display"></div>
 
-    <div id="loading-message" class="callout" style="display:none; text-align:center;">Processando...</div>
+    <div id="loading-message" class="callout" style="display:none; text-align:center; padding: 10px; background: #e9ecef; border-radius: 4px; margin-bottom: 10px;">Processando arquivo...</div>
     <div id="error-message" class="callout error" style="display:none; text-align:center;"></div>
     
     <div id="results-container">
@@ -72,7 +74,9 @@
                     <th>Passagem</th>
                     <th>Posto</th>
                     <th>Início</th>
+                    <th>Veículo</th>
                     <th>Horário Real</th>
+                    <th>Observações</th>
                 </tr>
             </thead>
             <tbody id="data-table-body"></tbody>
