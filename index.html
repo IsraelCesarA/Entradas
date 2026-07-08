@@ -3,225 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sindiônibus - Gerador de Relatório</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-    
-    <style>
-        :root {
-            --primary-color: #0056b3;
-            --secondary-color: #28a745;
-            --bg-color: #f4f7f9;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 500px;
-            text-align: center;
-        }
-
-        .logo-area {
-            margin-bottom: 20px;
-        }
-
-        .logo-placeholder {
-            font-size: 32px;
-            font-weight: 800;
-            color: var(--primary-color);
-            letter-spacing: -1px;
-        }
-
-        h2 {
-            font-size: 18px;
-            color: #555;
-            margin-bottom: 30px;
-            text-transform: uppercase;
-        }
-
-        .upload-section {
-            background: #fafafa;
-            border: 2px dashed #ddd;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 25px;
-            transition: 0.3s;
-        }
-
-        .upload-section:hover {
-            border-color: var(--primary-color);
-        }
-
-        label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: bold;
-            color: #333;
-        }
-
-        input[type="file"] {
-            width: 100%;
-            color: #666;
-        }
-
-        .btn-generate {
-            background-color: var(--secondary-color);
-            color: white;
-            border: none;
-            padding: 15px 30px;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: bold;
-            width: 100%;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .btn-generate:hover {
-            background-color: #218838;
-            transform: translateY(-2px);
-        }
-
-        .info-footer {
-            margin-top: 20px;
-            font-size: 12px;
-            color: #999;
-        }
-    </style>
+    <title>Consulta de Programação Diária - GIST</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div class="container">
-    <div class="logo-area">
-        <div class="logo-placeholder">SINDIÔNIBUS</div>
-        <h2>Validador Consulta</h2>
+    <header class="main-header">
+        <h1>Consulta de Programação Diária</h1>
+        <button id="theme-toggle">Alternar Tema</button>
+    </header>
+
+    <div class="controls">
+        <div class="file-controls">
+            <label for="file-input">Carregar Arquivo (Excel/CSV):</label>
+            <input type="file" id="file-input" accept=".csv, .xlsx, .xls">
+            <button id="clear-data-button">Limpar Dados</button>
+            <p class="help-text">Carregue um arquivo para começar.</p>
+        </div>
+        
+        <div id="filter-section" class="filter-container" style="display:none;">
+            <div class="filter-group">
+                <label for="lines-input">Linha:</label>
+                <input type="text" id="lines-input" placeholder="Ex: 038" class="short-input">
+                <div class="select-with-button">
+                    <select id="lines-filter" multiple></select>
+                    <button id="select-all-lines" class="secondary-button">Todas</button>
+                </div>
+            </div>
+    
+            <div class="filter-group">
+                <label for="table-input">Tabela:</label>
+                <input type="text" id="table-input" placeholder="Ex: 1" class="short-input">
+                <div class="select-with-button">
+                    <select id="table-filter" multiple></select>
+                    <button id="select-all-tables" class="secondary-button">Todas</button>
+                </div>
+
+                <label for="posto-input">Posto:</label>
+                <input type="text" id="posto-input" placeholder="Buscar..." class="short-input">
+                <div class="select-with-button">
+                    <select id="posto-filter" multiple></select>
+                    <button id="select-all-postos" class="secondary-button">Todos</button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <label for="start-time-filter">De:</label>
+                <input type="time" id="start-time-filter">
+                <label for="end-time-filter">Até:</label>
+                <input type="time" id="end-time-filter">
+            </div>
+        </div>
     </div>
+    
+    <div id="selected-filters-display"></div>
 
-    <div class="upload-section">
-        <label for="fileInput">Selecione o arquivo Validador.txt</label>
-        <input type="file" id="fileInput" accept=".txt">
-    </div>
-
-    <button class="btn-generate" onclick="processarRelatorio()">GERAR RELATÓRIO PDF</button>
-
-    <div class="info-footer">
-        Ordenação automática por Sentido e Horário <br>
-        Tabela formatada com 3 dígitos.
+    <div id="loading-message" class="callout" style="display:none; text-align:center;">Processando...</div>
+    <div id="error-message" class="callout error" style="display:none; text-align:center;"></div>
+    
+    <div id="results-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Linha</th>
+                    <th>Tabela</th>
+                    <th>Empresa</th>
+                    <th>Passagem</th>
+                    <th>Posto</th>
+                    <th>Início</th>
+                    <th>Horário Real</th>
+                </tr>
+            </thead>
+            <tbody id="data-table-body"></tbody>
+        </table>
     </div>
 </div>
 
-<script>
-    async function processarRelatorio() {
-        const input = document.getElementById('fileInput');
-        if (!input.files.length) {
-            alert("Por favor, selecione um arquivo .txt");
-            return;
-        }
-
-        const file = input.files[0];
-        const text = await file.text();
-        const linhas = text.split('\n').filter(l => l.trim().length > 50);
-        
-        let viagensIda = [];
-        let viagensVolta = [];
-        let dataReferencia = "";
-
-        linhas.forEach(linha => {
-            // Extração baseada nas posições fixas do arquivo TXT
-            const data = linha.substring(0, 10).trim();
-            const horaIni = linha.substring(22, 27).trim();
-            const horaFim = linha.substring(33, 38).trim();
-            const sentido = linha.substring(39, 45).trim(); 
-            const codLinha = linha.substring(56, 66).trim();
-            const veiculo = linha.substring(67, 77).trim();
-            const osOriginal = linha.substring(78, 82).trim(); // Ex: 0116
-            const giros = parseInt(linha.substring(83, 93).trim()) || 0;
-
-            if (data) dataReferencia = data;
-
-            const dadosViagem = {
-                sentido: sentido,
-                linha: codLinha,
-                tab: osOriginal.slice(-3), // CORREÇÃO: Apenas os 3 últimos dígitos
-                veiculo: veiculo,
-                inicio: horaIni,
-                fim: horaFim,
-                giros: giros
-            };
-
-            if (sentido.toLowerCase().includes("ida")) {
-                viagensIda.push(dadosViagem);
-            } else if (sentido.toLowerCase().includes("volta")) {
-                viagensVolta.push(dadosViagem);
-            }
-        });
-
-        // ORDENAÇÃO POR HORÁRIO
-        const ordenarPorHora = (a, b) => a.inicio.localeCompare(b.inicio);
-        viagensIda.sort(ordenarPorHora);
-        viagensVolta.sort(ordenarPorHora);
-
-        gerarPDF(viagensIda, viagensVolta, dataReferencia);
-    }
-
-    function gerarPDF(idas, voltas, dataRef) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const agora = new Date().toLocaleString('pt-BR');
-
-        // Cabeçalho do Relatório
-        doc.setFontSize(8);
-        doc.text(`EMITIDO EM: ${agora}`, 15, 10);
-        
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
-        doc.text("SUPERINTENDÊNCIA TÉCNICA", 105, 20, { align: "center" });
-        doc.text("SINDIÔNIBUS", 105, 27, { align: "center" });
-        
-        doc.setFontSize(10);
-        doc.setFont("helvetica", "normal");
-        doc.text("Relatório de Passageiros por Viagem", 105, 35, { align: "center" });
-        doc.text(`Data de Referência: ${dataRef}`, 105, 41, { align: "center" });
-
-        // Preparação dos dados para a tabela
-        let rows = [];
-        
-        if (idas.length > 0) {
-            rows.push([{ content: 'SENTIDO: IDA', colSpan: 7, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }]);
-            idas.forEach(v => rows.push([v.sentido, v.linha, v.tab, v.veiculo, v.inicio, v.fim, v.giros]));
-        }
-
-        if (voltas.length > 0) {
-            rows.push([{ content: 'SENTIDO: VOLTA', colSpan: 7, styles: { fillColor: [240, 240, 240], fontStyle: 'bold' } }]);
-            voltas.forEach(v => rows.push([v.sentido, v.linha, v.tab, v.veiculo, v.inicio, v.fim, v.giros]));
-        }
-
-        doc.autoTable({
-            startY: 48,
-            head: [["SENTIDO", "LINHA", "TAB", "VEÍCULO", "INÍCIO", "FIM", "GIROS"]],
-            body: rows,
-            theme: 'grid',
-            styles: { fontSize: 8, halign: 'center' },
-            headStyles: { fillColor: [0, 86, 179], textColor: 255 },
-            columnStyles: { 0: { halign: 'left' } }
-        });
-
-        doc.save(`Relatorio_Validador_${dataRef.replace(/\//g, '-')}.pdf`);
-    }
-</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="script.js"></script>
 
 </body>
 </html>
