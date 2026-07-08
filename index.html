@@ -3,104 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Pontos</title>
-    <style>
-        :root {
-            /* 🎨 Paleta Minimalista Profissional */
-            --cor-principal: #334155;
-            --cor-secundaria: #60A5FA;
-            --cor-destaque: #10B981;
-            --cor-texto-principal: #1E293B;
-            --cor-texto-secundario: #64748B;
-            --cor-fundo: #F8FAFC;
-            --cor-container: #FFFFFF;
-            --cor-borda: #E2E8F0;
-            --cor-cabecalho-tabela: #F1F5F9;
-            --cor-perigo: #EF4444;
-            --cor-pdf: #475569;
-        }
-
-        body.dark-mode {
-            --cor-principal: #94A3B8;
-            --cor-secundaria: #7DD3FC;
-            --cor-destaque: #34D399;
-            --cor-texto-principal: #E2E8F0;
-            --cor-texto-secundario: #94A3B8;
-            --cor-fundo: #0F172A;
-            --cor-container: #1E293B;
-            --cor-borda: #334155;
-            --cor-cabecalho-tabela: #273449;
-            --cor-perigo: #F87171;
-            --cor-pdf: #94A3B8;
-        }
-
-        body { 
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
-            background-color: var(--cor-fundo); 
-            color: var(--cor-texto-principal); 
-            padding: 10px; 
-            line-height: 1.5;
-            background-image: none; /* Sem bandeiras/setas */
-        }
-
-        .container { 
-            max-width: 1400px; 
-            margin: auto; 
-            background: var(--cor-container); 
-            padding: 24px; 
-            border-radius: 10px; 
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); 
-            border: 1px solid var(--cor-borda);
-            position: relative;
-            z-index: 2;
-        }
-
-        .main-header { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            margin-bottom: 24px; 
-            border-bottom: 2px solid var(--cor-secundaria);
-            padding-bottom: 12px;
-        }
-
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 16px; 
-            border: 1px solid var(--cor-borda);
-            border-radius: 6px;
-            overflow: hidden;
-            background: var(--cor-container);
-        }
-
-        th, td { 
-            border: 1px solid var(--cor-borda); 
-            padding: 10px 12px; 
-            text-align: left; 
-            font-size: 0.9em; 
-        }
-
-        th { 
-            background: var(--cor-cabecalho-tabela); 
-            color: var(--cor-principal);
-            font-weight: 600;
-        }
-
-        tr:nth-child(even) {
-            background: rgba(100, 116, 139, 0.03);
-        }
-
-        tr:hover {
-            background: rgba(96, 165, 250, 0.08);
-        }
-
-        .loading {
-            color: var(--cor-secundaria);
-            font-style: italic;
-            padding: 1rem;
-        }
-    </style>
+    <title>Controle de Postos</title>
+    <link rel="stylesheet" href="estilo.css">
 </head>
 <body>
 
@@ -110,64 +14,48 @@
         <button id="theme-toggle">Modo Escuro</button>
     </header>
 
-    <table id="tabelaPostos">
+    <div class="controls">
+        <div class="file-controls">
+            <input type="file" id="arquivo" accept=".csv, .txt">
+            <button class="secondary-button" id="carregar">Carregar Arquivo</button>
+            <button class="btn-success" id="salvar">Salvar Dados</button>
+            <button class="btn-pdf" id="exportarPdf">Exportar PDF</button>
+            <button id="clear-data-button">Limpar Tudo</button>
+        </div>
+
+        <div class="filter-group">
+            <label>Filtrar:</label>
+            <input type="text" class="short-input" id="filtroNumero" placeholder="Número">
+            <input type="text" class="short-input" id="filtroNome" placeholder="Nome">
+            <select id="filtroStatus">
+                <option value="">Todos</option>
+                <option value="ativo">Ativos</option>
+                <option value="inativo">Inativos</option>
+            </select>
+        </div>
+    </div>
+
+    <table id="tabelaDados">
         <thead>
             <tr>
                 <th>Número</th>
+                <th>Posto</th>
                 <th>Nome Fantasia</th>
-                <th>Descrição Completa</th>
+                <th>Descrição</th>
                 <th>Latitude</th>
                 <th>Longitude</th>
                 <th>Raio (m)</th>
+                <th>Observações</th>
             </tr>
         </thead>
         <tbody>
-            <tr><td colspan="6" class="loading">Carregando dados dos postos...</td></tr>
+            <tr>
+                <td colspan="8" class="loading">Carregando dados dos postos...</td>
+            </tr>
         </tbody>
     </table>
 </div>
 
-<script>
-// 🚀 Consumir a API e preencher a tabela
-async function carregarPostos() {
-    try {
-        const resposta = await fetch('http://gistapis.etufor.ce.gov.br:8081/api/postoControle');
-        if (!resposta.ok) throw new Error('Erro ao buscar dados');
-        
-        const postos = await resposta.json();
-        const corpoTabela = document.querySelector('#tabelaPostos tbody');
-        corpoTabela.innerHTML = ''; // limpa mensagem de carregamento
-
-        // Adiciona cada posto na tabela
-        postos.forEach(posto => {
-            const linha = document.createElement('tr');
-            linha.innerHTML = `
-                <td>${posto.numero}</td>
-                <td><strong>${posto.nomeFantasia || '-'}</strong></td>
-                <td>${posto.nome}</td>
-                <td>${posto.latitude.toFixed(6)}</td>
-                <td>${posto.longitude.toFixed(6)}</td>
-                <td>${posto.raio} m</td>
-            `;
-            corpoTabela.appendChild(linha);
-        });
-
-    } catch (erro) {
-        document.querySelector('#tabelaPostos tbody').innerHTML = 
-            `<tr><td colspan="6" style="color: var(--cor-perigo);">Erro ao carregar dados: ${erro.message}</td></tr>`;
-        console.error(erro);
-    }
-}
-
-// Botão de alternar modo escuro/claro
-document.getElementById('theme-toggle').addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    this.textContent = document.body.classList.contains('dark-mode') ? 'Modo Claro' : 'Modo Escuro';
-});
-
-// Carrega os dados ao abrir a página
-window.addEventListener('load', carregarPostos);
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
