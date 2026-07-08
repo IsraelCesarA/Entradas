@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
     const fileInput = document.getElementById('file-input');
     const loadPostosButton = document.getElementById('load-postos-button');
+    const exportExcelButton = document.getElementById('export-excel-button');
+    const exportPdfButton = document.getElementById('export-pdf-button');
     const linesInput = document.getElementById('lines-input');
     const tableInput = document.getElementById('table-input');
     const postoInput = document.getElementById('posto-input');
@@ -30,10 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadPostosButton.disabled = true;
 
         try {
-            // URL original da API
             const apiUrl = 'http://gistapis.etufor.ce.gov.br:8081/api/postoControle';
-            
-            // Usando um proxy para contornar o bloqueio de HTTPS do GitHub Pages
             const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(apiUrl);
 
             const response = await fetch(proxyUrl);
@@ -41,10 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Falha API Postos através do proxy');
             const data = await response.json();
             
-            console.log("FORMATO DO POSTO NA API:", data[0]); 
-            
             data.forEach(posto => {
-                // Tenta encontrar o ID e o Nome em várias propriedades possíveis
                 const idPosto = String(posto.id || posto.codigo || posto.Id || posto.codPosto || posto.ID_POSTO || posto.numero); 
                 const nome = posto.nomeFantasia || posto.nome || posto.NomeFantasia || posto.Descricao || posto.descricao || posto.NOM_POSTO;
                 
@@ -56,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('gistNomesPostos', JSON.stringify(nomesPostos));
             loadPostosButton.innerText = 'Concluído!';
             
-            // Atualiza a tabela imediatamente se já houver dados do Excel carregados
             if (allData.length > 0) {
                 populateFilters(allData);
                 updateSelectedFiltersDisplay();
@@ -72,6 +67,78 @@ document.addEventListener('DOMContentLoaded', () => {
             loadPostosButton.innerText = originalText;
             loadPostosButton.disabled = false;
         }, 3000);
+    });
+
+    // Função auxiliar para capturar os dados exibidos atualmente na tabela (incluindo inputs)
+    function getTableExportData() {
+        const rows = Array.from(dataTableBody.querySelectorAll('tr'));
+        return rows.map(tr => {
+            const cells = tr.querySelectorAll('td');
+            const vIn = tr.querySelector('.v-input');
+            const tIn = tr.querySelector('.t-input');
+            const oIn = tr.querySelector('.obs-input');
+
+            // Limpa o texto da coluna de Início removendo o aviso de atraso/adiantamento se houver
+            let inicioText = cells[5].innerText.split('\n')[0].trim();
+            inicioText = inicioText.replace('(Atraso)', '').replace('(Adiantamento)', '').trim();
+
+            return {
+                "Linha": cells[0].innerText,
+                "Tabela": cells[1].innerText,
+                "Empresa": cells[2].innerText,
+                "Passagem": cells[3].innerText,
+                "Posto": cells[4].innerText,
+                "Início": inicioText,
+                "Veículo": vIn ? vIn.value : '',
+                "Horário Real": tIn ? tIn.value : '',
+                "Observações": oIn ? oIn.value : ''
+            };
+        });
+    }
+
+    // Evento de Exportar Excel
+    exportExcelButton.addEventListener('click', () => {
+        const data = getTableExportData();
+        if (data.length === 0) {
+            alert('Não há dados visíveis para exportar.');
+            return;
+        }
+        
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Programação");
+        XLSX.writeFile(wb, "programacao_diaria.xlsx");
+    });
+
+    // Evento de Exportar PDF
+    exportPdfButton.addEventListener('click', () => {
+        const data = getTableExportData();
+        if (data.length === 0) {
+            alert('Não há dados visíveis para exportar.');
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('landscape'); // Usar paisagem para caber mais colunas
+
+        const columns = ["Linha", "Tabela", "Empresa", "Passagem", "Posto", "Início", "Veículo", "Horário Real", "Observações"];
+        const rows = data.map(item => [
+            item["Linha"], item["Tabela"], item["Empresa"], item["Passagem"],
+            item["Posto"], item["Início"], item["Veículo"], item["Horário Real"], item["Observações"]
+        ]);
+
+        doc.text("Consulta de Programação Diária", 14, 15);
+        
+        doc.autoTable({
+            startY: 20,
+            head: [columns],
+            body: rows,
+            theme: 'grid',
+            styles: { fontSize: 8 },
+            headStyles: { fillColor: [0, 123, 255] }
+        });
+
+        doc.save("programacao_diaria.pdf");
     });
 
     // Evento de Carregamento de Arquivo Excel/CSV
@@ -158,7 +225,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const opt = document.createElement('option');
                 opt.value = val; 
                 
-                // Exibe o número e o nome do posto no filtro, se o nome estiver mapeado
                 if (key === 'PostoControle' && nomesPostos[val]) {
                     opt.textContent = `${val} - ${nomesPostos[val]}`;
                 } else {
@@ -268,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const tr = document.createElement('tr');
             const val = inputs[item.id] || { veiculo: '', realTime: '', observacao: '' };
             
-            // Define o nome de exibição: "Número - Nome" se existir, se não, apenas o "Número"
             const nomePostoDisplay = nomesPostos[item.PostoControle] 
                 ? ` - ${nomesPostos[item.PostoControle]}` 
                 : '';
@@ -290,7 +355,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const rIn = tr.querySelector(`#real-time-${item.id}`);
             const oIn = tr.querySelector(`#obs-${item.id}`);
             
-            // Navegação fluida com a tecla "Enter"
             vIn.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') {
                     e.preventDefault();
