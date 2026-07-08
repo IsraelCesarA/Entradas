@@ -1,41 +1,41 @@
 :root {
-    --brasil-verde: #009c3b;
-    --brasil-amarelo: #ffdf00;
-    --brasil-azul: #002776;
-    --brasil-branco: #ffffff;
-    --brasil-cinza-claro: #f8f9fa;
-    --brasil-cinza-medio: #e9ecef;
-    --brasil-cinza-escuro: #343a40;
-
-    --bg-color: var(--brasil-cinza-claro);
-    --container-bg-color: var(--brasil-branco);
-    --text-color: var(--brasil-cinza-escuro);
-    --border-color: var(--brasil-cinza-medio);
-    --primary-color: var(--brasil-verde);
-    --input-bg: var(--brasil-branco);
-    --danger-color: #dc3545;
-    --table-header-bg: var(--brasil-amarelo);
-    --success-color: var(--brasil-verde);
-    --pdf-color: var(--brasil-azul);
+    /* 🎨 Paleta Minimalista Profissional */
+    --cor-principal: #334155;       /* Cinza azulado — confiança e destaque */
+    --cor-secundaria: #60A5FA;      /* Azul suave — botões e detalhes */
+    --cor-destaque: #10B981;        /* Verde discreto — confirmações e sucesso */
+    --cor-texto-principal: #1E293B; /* Texto escuro, suave (não preto puro) */
+    --cor-texto-secundario: #64748B;/* Textos menos importantes */
+    --cor-fundo: #F8FAFC;           /* Fundo geral muito claro */
+    --cor-container: #FFFFFF;       /* Fundo da área principal */
+    --cor-borda: #E2E8F0;           /* Bordas leves */
+    --cor-cabecalho-tabela: #F1F5F9;/* Fundo do cabeçalho da tabela */
+    --cor-perigo: #EF4444;          /* Avisos, exclusões */
+    --cor-pdf: #475569;             /* Botão PDF */
 }
 
 body.dark-mode {
-    --bg-color: #0a2e17;
-    --container-bg-color: #004d1a;
-    --text-color: #f8f9fa;
-    --border-color: #007a29;
-    --primary-color: var(--brasil-amarelo);
-    --input-bg: #006622;
-    --table-header-bg: #ccb200;
+    /* 🎨 Versão Modo Escuro — também minimalista */
+    --cor-principal: #94A3B8;
+    --cor-secundaria: #7DD3FC;
+    --cor-destaque: #34D399;
+    --cor-texto-principal: #E2E8F0;
+    --cor-texto-secundario: #94A3B8;
+    --cor-fundo: #0F172A;
+    --cor-container: #1E293B;
+    --cor-borda: #334155;
+    --cor-cabecalho-tabela: #273449;
+    --cor-perigo: #F87171;
+    --cor-pdf: #94A3B8;
 }
 
 body { 
-    font-family: sans-serif; 
-    background-color: var(--bg-color); 
-    color: var(--text-color); 
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif; 
+    background-color: var(--cor-fundo); 
+    color: var(--cor-texto-principal); 
     padding: 10px; 
+    line-height: 1.5;
 
-    /* 🇧🇷 AQUI É O PRINCIPAL: VÁRIAS MINI BANDEIRAS NO LOCAL DAS SETAS 🇧🇷 */
+    /* 🇧🇷 Mantém as mini bandeiras nas laterais */
     background-image: 
         url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
         url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
@@ -50,25 +50,14 @@ body {
         url('https://cdn-icons-png.flaticon.com/512/225/225455.png');
 
     background-position: 
-        left 12px top 120px,
-        left 12px top 170px,
-        left 12px top 220px,
-        left 12px top 270px,
-        left 12px top 320px,
-
-        right 12px top 120px,
-        right 12px top 170px,
-        right 12px top 220px,
-        right 12px top 270px,
-        right 12px top 320px;
-
+        left 12px top 120px, left 12px top 170px, left 12px top 220px, left 12px top 270px, left 12px top 320px,
+        right 12px top 120px, right 12px top 170px, right 12px top 220px, right 12px top 270px, right 12px top 320px;
     background-repeat: no-repeat;
-    background-size: 24px auto; /* Tamanho das bandeirinhas */
+    background-size: 22px auto;
     background-attachment: fixed;
-    position: relative;
 }
 
-/* 🔴 ISSO É O MAIS IMPORTANTE: ESCONDE QUALQUER ÍCONE/SETA QUE ESTAVA LÁ 🔴 */
+/* Esconde setas ou ícones antigos */
 body::before, body::after,
 .side-icon, .arrow-icon, [class*="arrow"], [class*="seta"],
 div[style*="position: fixed"], div[style*="position: absolute"] {
@@ -77,37 +66,14 @@ div[style*="position: fixed"], div[style*="position: absolute"] {
     opacity: 0 !important;
 }
 
-/* Modo escuro - bandeiras brilham mais */
-body.dark-mode {
-    background-image: 
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png'),
-        url('https://cdn-icons-png.flaticon.com/512/225/225455.png');
-    background-position: 
-        left 12px top 120px, left 12px top 170px, left 12px top 220px, left 12px top 270px, left 12px top 320px,
-        right 12px top 120px, right 12px top 170px, right 12px top 220px, right 12px top 270px, right 12px top 320px;
-    background-repeat: no-repeat;
-    background-size: 24px auto;
-    background-attachment: fixed;
-    filter: brightness(1.4);
-}
-
 .container { 
     max-width: 1400px; 
     margin: auto; 
-    background: var(--container-bg-color); 
-    padding: 20px; 
-    border-radius: 8px; 
-    box-shadow: 0 2px 8px rgba(0, 156, 59, 0.2); 
-    border: 3px solid var(--brasil-amarelo);
+    background: var(--cor-container); 
+    padding: 24px; 
+    border-radius: 10px; 
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); 
+    border: 1px solid var(--cor-borda);
     position: relative;
     z-index: 2;
 }
@@ -116,21 +82,21 @@ body.dark-mode {
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    margin-bottom: 20px; 
-    border-bottom: 3px solid var(--brasil-verde);
-    padding-bottom: 10px;
+    margin-bottom: 24px; 
+    border-bottom: 2px solid var(--cor-secundaria);
+    padding-bottom: 12px;
 }
 
 .controls { 
     display: flex; 
     flex-direction: column; 
-    gap: 15px; 
+    gap: 16px; 
 }
 
 .file-controls { 
     display: flex; 
     flex-wrap: wrap; 
-    gap: 10px; 
+    gap: 12px; 
     align-items: center; 
 }
 
@@ -143,195 +109,195 @@ body.dark-mode {
 .filter-group { 
     display: flex; 
     flex-wrap: wrap; 
-    gap: 10px; 
+    gap: 12px; 
     align-items: center; 
-    padding: 10px; 
-    border-bottom: 2px solid var(--brasil-amarelo); 
-    background: rgba(255, 223, 0, 0.1);
+    padding: 12px; 
+    border-bottom: 1px solid var(--cor-borda); 
+    background: rgba(100, 116, 139, 0.05);
     border-radius: 6px;
 }
 
 .short-input { 
     width: 80px; 
-    padding: 6px; 
-    border: 1px solid var(--border-color); 
+    padding: 6px 8px; 
+    border: 1px solid var(--cor-borda); 
     border-radius: 4px; 
-    background: var(--input-bg); 
-    color: var(--text-color); 
+    background: var(--cor-container); 
+    color: var(--cor-texto-principal); 
+    font-size: 0.9em;
 }
 
 select { 
-    min-width: 120px; 
-    height: 35px; 
-    background: var(--input-bg); 
-    color: var(--text-color); 
-    border: 1px solid var(--border-color); 
+    min-width: 130px; 
+    height: 36px; 
+    background: var(--cor-container); 
+    color: var(--cor-texto-principal); 
+    border: 1px solid var(--cor-borda); 
+    border-radius: 4px;
+    padding: 0 8px;
     cursor: pointer;
 }
 
+/* Botões */
 .secondary-button { 
-    padding: 5px 12px; 
-    font-size: 0.85em; 
+    padding: 6px 14px; 
+    font-size: 0.9em; 
     cursor: pointer; 
     background: transparent; 
-    border: 2px solid var(--brasil-verde); 
-    color: var(--brasil-verde); 
+    border: 1px solid var(--cor-principal); 
+    color: var(--cor-principal); 
     border-radius: 4px; 
-    font-weight: bold;
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
 .secondary-button:hover {
-    background: var(--brasil-verde);
-    color: var(--brasil-branco);
-    transition: all 0.3s ease;
+    background: var(--cor-principal);
+    color: #FFFFFF;
 }
 
 .btn-success { 
-    background: var(--brasil-verde); 
-    color: var(--brasil-branco); 
+    background: var(--cor-destaque); 
+    color: #FFFFFF; 
     border: none; 
-    font-weight: bold;
+    font-weight: 500;
 }
 
 .btn-success:hover {
-    background: #007a29;
-    transition: all 0.3s ease;
+    background: #059669;
 }
 
 .btn-pdf { 
-    background: var(--brasil-azul); 
-    color: var(--brasil-branco); 
+    background: var(--cor-pdf); 
+    color: #FFFFFF; 
     border: none; 
-    font-weight: bold;
+    font-weight: 500;
 }
 
 .btn-pdf:hover {
-    background: #001a4d;
-    transition: all 0.3s ease;
+    background: #334155;
 }
 
+/* Tabela */
 table { 
     width: 100%; 
     border-collapse: collapse; 
-    margin-top: 15px; 
-    border: 2px solid var(--brasil-verde);
+    margin-top: 16px; 
+    border: 1px solid var(--cor-borda);
     border-radius: 6px;
     overflow: hidden;
     position: relative;
     z-index: 3;
-    background: var(--container-bg-color);
+    background: var(--cor-container);
 }
 
 th, td { 
-    border: 1px solid var(--border-color); 
-    padding: 10px 8px; 
+    border: 1px solid var(--cor-borda); 
+    padding: 10px 12px; 
     text-align: left; 
-    font-size: 0.85em; 
+    font-size: 0.9em; 
 }
 
 th { 
-    background: var(--table-header-bg); 
-    color: var(--brasil-azul);
-    font-weight: bold;
+    background: var(--cor-cabecalho-tabela); 
+    color: var(--cor-principal);
+    font-weight: 600;
 }
 
 tr:nth-child(even) {
-    background: rgba(0, 156, 59, 0.05);
+    background: rgba(100, 116, 139, 0.03);
 }
 
 tr:hover {
-    background: rgba(255, 223, 0, 0.15);
-    transition: background 0.2s ease;
+    background: rgba(96, 165, 250, 0.08);
 }
 
 .obs-input { 
     width: 180px; 
-    padding: 4px; 
-    border: 1px solid var(--border-color); 
+    padding: 5px 8px; 
+    border: 1px solid var(--cor-borda); 
     border-radius: 4px; 
-    background: var(--input-bg); 
-    color: var(--text-color); 
+    background: var(--cor-container); 
+    color: var(--cor-texto-principal); 
 }
 
 .obs-input:focus { 
-    border-color: var(--brasil-verde); 
+    border-color: var(--cor-secundaria); 
     outline: none; 
-    box-shadow: 0 0 5px rgba(0, 156, 59, 0.5); 
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2); 
 }
 
 .input-group { 
     display: flex; 
-    gap: 5px; 
+    gap: 6px; 
     align-items: center; 
 }
 
 .input-group input.v-input { 
     width: 55px; 
-    padding: 4px; 
-    background: var(--input-bg); 
-    color: var(--text-color); 
-    border: 1px solid var(--border-color); 
+    padding: 5px 8px; 
+    background: var(--cor-container); 
+    color: var(--cor-texto-principal); 
+    border: 1px solid var(--cor-borda); 
     border-radius: 4px; 
 }
 
 .input-group input:focus { 
-    border-color: var(--brasil-verde); 
+    border-color: var(--cor-secundaria); 
     outline: none; 
-    box-shadow: 0 0 5px rgba(0, 156, 59, 0.5); 
+    box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2); 
 }
 
 .input-group input[type="time"] { 
-    width: 85px; 
+    width: 90px; 
 }
 
 .lost-entry { 
-    font-weight: bold; 
-    margin-left: 5px; 
-    font-size: 0.8em; 
+    font-weight: 500; 
+    margin-left: 6px; 
+    font-size: 0.85em; 
 }
 
-.lost-atraso { color: #dc3545; }
-.lost-adiantamento { color: #f59e0b; }
+.lost-atraso { color: var(--cor-perigo); }
+.lost-adiantamento { color: #F59E0B; }
 
 .passed-time-dot { 
     height: 10px; 
     width: 10px; 
-    background: #dc3545; 
+    background: var(--cor-perigo); 
     border-radius: 50%; 
     display: none; 
-    margin-left: 5px; 
+    margin-left: 6px; 
 }
 
 .passed-time-dot.visible { display: inline-block; }
 
 #theme-toggle { 
     cursor: pointer; 
-    padding: 6px 18px; 
+    padding: 6px 16px; 
     border-radius: 20px; 
-    border: 2px solid var(--brasil-amarelo); 
-    background: var(--brasil-verde); 
-    color: var(--brasil-branco); 
-    font-weight: bold;
+    border: 1px solid var(--cor-secundaria); 
+    background: transparent; 
+    color: var(--cor-secundaria); 
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
 #theme-toggle:hover {
-    background: var(--brasil-amarelo);
-    color: var(--brasil-azul);
-    border-color: var(--brasil-verde);
-    transition: all 0.3s ease;
+    background: var(--cor-secundaria);
+    color: #FFFFFF;
 }
 
 #clear-data-button { 
-    background: var(--danger-color); 
-    color: #fff; 
+    background: var(--cor-perigo); 
+    color: #FFFFFF; 
     border: none; 
     padding: 8px 12px; 
     border-radius: 4px; 
     cursor: pointer; 
-    font-weight: bold;
+    font-weight: 500;
 }
 
 #clear-data-button:hover {
-    background: #b02a37;
-    transition: all 0.3s ease;
+    background: #DC2626;
 }
