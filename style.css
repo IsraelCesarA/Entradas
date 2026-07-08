@@ -1,4 +1,5 @@
 :root {
+    /* Paleta Minimalista Profissional */
     --cor-principal: #334155;
     --cor-secundaria: #60A5FA;
     --cor-destaque: #10B981;
@@ -34,6 +35,7 @@ body {
     line-height: 1.5;
     background-image: none;
     margin: 0;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container { 
@@ -44,6 +46,7 @@ body {
     border-radius: 10px; 
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); 
     border: 1px solid var(--cor-borda);
+    transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 .main-header { 
@@ -53,13 +56,7 @@ body {
     margin-bottom: 24px; 
     border-bottom: 2px solid var(--cor-secundaria);
     padding-bottom: 12px;
-}
-
-.controls { 
-    display: flex; 
-    flex-direction: column; 
-    gap: 16px; 
-    margin-bottom: 20px;
+    transition: border-color 0.3s ease;
 }
 
 .file-controls { 
@@ -67,6 +64,7 @@ body {
     flex-wrap: wrap; 
     gap: 12px; 
     align-items: center; 
+    margin-bottom: 16px;
 }
 
 .filter-group { 
@@ -75,9 +73,10 @@ body {
     gap: 12px; 
     align-items: center; 
     padding: 12px; 
-    border: 1px solid var(--cor-borda); 
     background: rgba(100, 116, 139, 0.05);
     border-radius: 6px;
+    margin-bottom: 16px;
+    transition: background-color 0.3s ease;
 }
 
 .short-input { 
@@ -88,6 +87,7 @@ body {
     background: var(--cor-container); 
     color: var(--cor-texto-principal); 
     font-size: 0.9em;
+    transition: all 0.3s ease;
 }
 
 select { 
@@ -99,6 +99,7 @@ select {
     border-radius: 4px;
     padding: 0 8px;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .secondary-button { 
@@ -155,6 +156,7 @@ table {
     border-radius: 6px;
     overflow: hidden;
     background: var(--cor-container);
+    transition: all 0.3s ease;
 }
 
 th, td { 
@@ -162,27 +164,29 @@ th, td {
     padding: 10px 12px; 
     text-align: left; 
     font-size: 0.9em; 
+    transition: border-color 0.3s ease;
 }
 
 th { 
     background: var(--cor-cabecalho-tabela); 
     color: var(--cor-principal);
     font-weight: 600;
+    transition: background-color 0.3s ease;
 }
 
 tr:nth-child(even) {
     background: rgba(100, 116, 139, 0.03);
+    transition: background-color 0.3s ease;
 }
 
 tr:hover {
     background: rgba(96, 165, 250, 0.08);
 }
 
-.loading {
-    color: var(--cor-secundaria);
-    font-style: italic;
+.info-centro {
     text-align: center;
     padding: 2rem;
+    color: var(--cor-texto-secundario);
 }
 
 .erro {
@@ -198,6 +202,7 @@ tr:hover {
     border-radius: 4px; 
     background: var(--cor-container); 
     color: var(--cor-texto-principal); 
+    transition: all 0.3s ease;
 }
 
 .obs-input:focus { 
@@ -214,7 +219,7 @@ tr:hover {
     background: transparent; 
     color: var(--cor-secundaria); 
     font-weight: 500;
-    transition: all 0.2s ease;
+    transition: all 0.3s ease;
 }
 
 #theme-toggle:hover {
