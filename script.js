@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
         loadPostosButton.disabled = true;
 
         try {
-            const response = await fetch('http://gistapis.etufor.ce.gov.br:8081/api/postoControle');
+            const response = await fetch('https://gistapis.etufor.ce.gov.br:8081/api/postoControle');
             if (!response.ok) throw new Error('Falha API Postos');
             const data = await response.json();
             
