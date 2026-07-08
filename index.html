@@ -20,6 +20,8 @@
             <input type="file" id="file-input" accept=".csv, .xlsx, .xls" class="table-input" style="padding: 4px;">
             
             <button id="load-postos-button" class="btn secondary-btn">Carregar Postos</button>
+            <button id="export-excel-button" class="btn success-btn">Exportar Excel</button>
+            <button id="export-pdf-button" class="btn danger-btn">Exportar PDF</button>
             <button id="clear-data-button" class="btn danger-btn">Limpar Dados</button>
             <p class="help-text" style="font-size: 0.85em; color: #666; margin-top: 5px;">Carregue a planilha para montar a tabela. Depois, use "Carregar Postos" para buscar os nomes na API.</p>
         </div>
@@ -61,7 +63,7 @@
     
     <div id="selected-filters-display"></div>
 
-    <div id="loading-message" class="callout" style="display:none; text-align:center; padding: 10px; background: #e9ecef; border-radius: 4px; margin-bottom: 10px;">Processando arquivo...</div>
+    <div id="loading-message" class="callout" style="display:none; text-align:center; padding: 10px; background: #e9ecef; border-radius: 4px; margin-bottom: 10px;">Processando...</div>
     <div id="error-message" class="callout error" style="display:none; text-align:center;"></div>
     
     <div id="results-container">
@@ -85,6 +87,8 @@
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 <script src="script.js"></script>
 
 </body>
