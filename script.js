@@ -1,169 +1,283 @@
-let allData = [];
-let elements = {};
-
 document.addEventListener('DOMContentLoaded', () => {
-    elements = {
-        loginScreen: document.getElementById('login-screen'),
-        mainDashboard: document.getElementById('main-dashboard'),
-        loginButton: document.getElementById('login-button'),
-        fileInput: document.getElementById('file-input'),
-        autoFillBtn: document.getElementById('auto-fill-btn'),
-        dataTableBody: document.getElementById('data-table-body'),
-        loadingOverlay: document.getElementById('loading-message'),
-        linesFilter: document.getElementById('lines-filter'),
-        tableFilter: document.getElementById('table-filter'),
-        postoFilter: document.getElementById('posto-filter')
-    };
+    const fileInput = document.getElementById('file-input');
+    const linesInput = document.getElementById('lines-input');
+    const tableInput = document.getElementById('table-input');
+    const postoInput = document.getElementById('posto-input');
+    const linesFilter = document.getElementById('lines-filter');
+    const tableFilter = document.getElementById('table-filter');
+    const postoFilter = document.getElementById('posto-filter');
+    const selectAllLinesBtn = document.getElementById('select-all-lines');
+    const selectAllTablesBtn = document.getElementById('select-all-tables');
+    const selectAllPostosBtn = document.getElementById('select-all-postos');
+    const selectedFiltersDisplay = document.getElementById('selected-filters-display');
+    const dataTableBody = document.getElementById('data-table-body');
+    const loadingMessage = document.getElementById('loading-message');
+    const errorMessage = document.getElementById('error-message');
+    const themeToggleButton = document.getElementById('theme-toggle');
+    const clearDataButton = document.getElementById('clear-data-button');
+    const filterSection = document.getElementById('filter-section');
+    const startTimeFilter = document.getElementById('start-time-filter');
+    const endTimeFilter = document.getElementById('end-time-filter');
 
-    // Relógio e atualização de cores
-    setInterval(() => {
-        document.getElementById('clock').innerText = new Date().toLocaleTimeString();
-        if(allData.length > 0) renderTable(allData);
-    }, 30000);
+    let allData = [];
+    let updateInterval;
 
-    elements.loginButton.addEventListener('click', () => {
-        if (document.getElementById('username').value === "CCO" && document.getElementById('password').value === "l6y;CqXV") {
-            elements.loginScreen.style.display = 'none';
-            elements.mainDashboard.style.display = 'block';
-            loadStoredData();
+    function checkTime(itemId, scheduledTimeStr) {
+        const realTimeInput = document.getElementById(`real-time-${itemId}`);
+        const veiculoInput = document.getElementById(`veiculo-${itemId}`);
+        const lostMessageSpan = document.getElementById(`lost-msg-${itemId}`);
+        if (!lostMessageSpan || !realTimeInput.value) return;
+
+        if (!veiculoInput.value || veiculoInput.value.length !== 5) {
+            alert('Insira um veículo de 5 dígitos.');
+            realTimeInput.value = '';
+            return;
+        }
+
+        const [hPrev, mPrev] = scheduledTimeStr.split(':').map(Number);
+        const [hReal, mReal] = realTimeInput.value.split(':').map(Number);
+        const diff = (hReal * 60 + mReal) - (hPrev * 60 + mPrev);
+
+        lostMessageSpan.style.display = 'inline';
+        if (diff > 10) {
+            lostMessageSpan.innerText = `(Atraso)`;
+            lostMessageSpan.className = 'lost-entry lost-atraso';
+        } else if (diff < -10) {
+            lostMessageSpan.innerText = `(Adiantamento)`;
+            lostMessageSpan.className = 'lost-entry lost-adiantamento';
         } else {
-            document.getElementById('login-error').style.display = 'block';
+            lostMessageSpan.style.display = 'none';
         }
-    });
+    }
 
-    [elements.linesFilter, elements.tableFilter, elements.postoFilter].forEach(f => 
-        f.addEventListener('change', () => renderTable(allData))
-    );
-
-    elements.autoFillBtn.addEventListener('click', async () => {
-        if (allData.length === 0) return;
-        elements.loadingOverlay.style.display = 'flex';
-        
-        try {
-            const response = await fetch('http://201.49.34.51:8081/gps?verde&gar=0');
-            
-            // PROTEÇÃO: Verifica se o retorno é HTML em vez de JSON
-            const contentType = response.headers.get("content-type");
-            if (!contentType || !contentType.includes("application/json")) {
-                throw new TypeError("O servidor enviou uma página (HTML) em vez de dados. Verifique o login.");
-            }
-
-            const gpsData = await response.json();
-            const inputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
-            const mapaGps = {};
-            gpsData.forEach(bus => mapaGps[`${bus.LINHA}-${bus.TABELA}`] = bus.VEICULO || bus.PREFIXO);
-
-            allData.forEach(item => {
-                const key = `${item.Linha}-${item.Tabela}`;
-                if (mapaGps[key] && (!inputs[item.id] || !inputs[item.id].veiculo)) {
-                    if (!inputs[item.id]) inputs[item.id] = { veiculo: '', real: '', obs: '' };
-                    inputs[item.id].veiculo = mapaGps[key];
-                }
-            });
-            localStorage.setItem('gistUserInputs', JSON.stringify(inputs));
+    function initializeApp() {
+        const currentTheme = localStorage.getItem('theme');
+        document.body.classList.toggle('dark-mode', currentTheme === 'dark');
+        const savedData = localStorage.getItem('gistFileData');
+        if (savedData) {
+            allData = JSON.parse(savedData);
+            filterSection.style.display = 'flex';
+            populateFilters(allData);
+            loadFilterState();
+            updateSelectedFiltersDisplay();
             renderTable(allData);
-        } catch (err) { 
-            alert("Erro no GPS: O servidor retornou uma página de login ou erro. " + err.message);
         }
-        elements.loadingOverlay.style.display = 'none';
+    }
+
+    function populateFilters(data) {
+        const fill = (el, key) => {
+            const items = [...new Set(data.map(item => item[key].trim()))].sort();
+            el.innerHTML = '';
+            items.forEach(val => {
+                const opt = document.createElement('option');
+                opt.value = val; opt.textContent = val;
+                el.appendChild(opt);
+            });
+        };
+        fill(linesFilter, 'Linha');
+        fill(tableFilter, 'Tabela');
+        fill(postoFilter, 'PostoControle');
+    }
+
+    function setupQuickSearch(inputEl, filterEl) {
+        inputEl.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const val = inputEl.value.trim();
+                if (val) {
+                    const found = Array.from(filterEl.options).find(opt => opt.value.toLowerCase() === val.toLowerCase());
+                    if (found) {
+                        found.selected = true;
+                        filterEl.dispatchEvent(new Event('change'));
+                    } else { alert(`"${val}" não encontrado.`); }
+                    inputEl.value = '';
+                }
+            }
+        });
+    }
+
+    setupQuickSearch(linesInput, linesFilter);
+    setupQuickSearch(tableInput, tableFilter);
+    setupQuickSearch(postoInput, postoFilter);
+
+    function handleToggleAll(filterEl) {
+        const options = Array.from(filterEl.options);
+        const allSelected = options.every(opt => opt.selected);
+        options.forEach(opt => opt.selected = !allSelected);
+        filterEl.dispatchEvent(new Event('change'));
+    }
+
+    [linesFilter, tableFilter, postoFilter].forEach(el => {
+        el.addEventListener('change', () => {
+            updateSelectedFiltersDisplay();
+            renderTable(allData);
+            saveFilterState();
+        });
     });
 
-    elements.fileInput.addEventListener('change', (e) => {
+    selectAllLinesBtn.addEventListener('click', () => handleToggleAll(linesFilter));
+    selectAllTablesBtn.addEventListener('click', () => handleToggleAll(tableFilter));
+    selectAllPostosBtn.addEventListener('click', () => handleToggleAll(postoFilter));
+    startTimeFilter.addEventListener('input', () => { renderTable(allData); saveFilterState(); });
+    endTimeFilter.addEventListener('input', () => { renderTable(allData); saveFilterState(); });
+
+    themeToggleButton.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    });
+
+    clearDataButton.addEventListener('click', () => {
+        if (confirm('Limpar todos os dados?')) {
+            localStorage.clear();
+            window.location.reload();
+        }
+    });
+
+    fileInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
+        if (!file) return;
+        loadingMessage.style.display = 'block';
         const reader = new FileReader();
         reader.onload = (evt) => {
-            const data = new Uint8Array(evt.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
-            allData = json.map((row, idx) => ({
-                id: idx,
-                Linha: String(row.GOP_PDH_LINHA || ''),
-                Tabela: String(row.GOP_PDH_TABELA || ''),
-                Posto: String(row.GOP_PDH_POSTO_CONTROLE_INICIAL || ''),
-                Inicio: String(row.GOP_PDH_HORARIO_INICIO || '').slice(-5)
-            }));
-            localStorage.setItem('gistFileData', JSON.stringify(allData));
-            populateFilters(allData);
-            renderTable(allData);
-            document.getElementById('filter-section').style.display = 'flex';
+            try {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const json = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+                allData = json.map((row, idx) => ({
+                    id: idx,
+                    Linha: String(row.GOP_PDH_LINHA || ''),
+                    Tabela: String(row.GOP_PDH_TABELA || ''),
+                    Empresa: String(row.GOP_PDH_EMPRESA || ''),
+                    PostoControle: String(row.GOP_PDH_POSTO_CONTROLE_INICIAL || ''),
+                    GOP_PDH_HORARIO_INICIO: String(row.GOP_PDH_HORARIO_INICIO || '').slice(-5),
+                    TipoPassagem: String(row.GOP_PDH_COD_PASSAGEM_INICIAL || '')
+                })).filter(i => /^\d{2}:\d{2}$/.test(i.GOP_PDH_HORARIO_INICIO));
+                localStorage.setItem('gistFileData', JSON.stringify(allData));
+                window.location.reload();
+            } catch (err) { alert('Erro no arquivo'); loadingMessage.style.display = 'none'; }
         };
         reader.readAsArrayBuffer(file);
     });
-});
 
-function populateFilters(data) {
-    const fill = (select, key) => {
-        const vals = [...new Set(data.map(i => i[key]))].sort();
-        select.innerHTML = vals.map(v => `<option value="${v}">${v}</option>`).join('');
-    };
-    fill(elements.linesFilter, 'Linha');
-    fill(elements.tableFilter, 'Tabela');
-    fill(elements.postoFilter, 'Posto');
-}
-
-function renderTable(data) {
-    const body = document.getElementById('data-table-body');
-    const lSel = Array.from(elements.linesFilter.selectedOptions).map(o => o.value);
-    const tSel = Array.from(elements.tableFilter.selectedOptions).map(o => o.value);
-    const pSel = Array.from(elements.postoFilter.selectedOptions).map(o => o.value);
-
-    // ORDENAÇÃO CRESCENTE[cite: 2]
-    const filtered = data.filter(i => 
-        (lSel.length === 0 || lSel.includes(i.Linha)) &&
-        (tSel.length === 0 || tSel.includes(i.Tabela)) &&
-        (pSel.length === 0 || pSel.includes(i.Posto))
-    ).sort((a, b) => a.Inicio.localeCompare(b.Inicio));
-
-    body.innerHTML = '';
-    const inputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
-    const curMin = new Date().getHours() * 60 + new Date().getMinutes();
-
-    filtered.forEach(item => {
-        const val = inputs[item.id] || { veiculo: '', real: '', obs: '' };
-        const [h, m] = item.Inicio.split(':').map(Number);
-        const isPast = (h * 60 + m) < curMin;
-
-        const tr = document.createElement('tr');
-        if (isPast) tr.classList.add('row-past');
-        
-        tr.innerHTML = `
-            <td>${item.Linha}</td><td>${item.Tabela}</td><td>${item.Posto}</td>
-            <td class="${isPast ? 'text-red' : ''}">${item.Inicio}</td>
-            <td><div class="input-group">
-                <input type="text" class="v-input" value="${val.veiculo || ''}" onchange="save(${item.id}, 'veiculo', this.value)">
-                <input type="time" class="t-input" value="${val.real || ''}" onchange="save(${item.id}, 'real', this.value)">
-            </div></td>
-            <td>${calculateStatus(item.Inicio, val.real, isPast)}</td>
-            <td><input type="text" class="obs-input" value="${val.obs || ''}" onchange="save(${item.id}, 'obs', this.value)"></td>
-        `;
-        body.appendChild(tr);
-    });
-}
-
-function calculateStatus(prev, real, isPast) {
-    if (!real) return isPast ? "<span class='perdeu'>Perdeu a entrada</span>" : "";
-    const p = prev.split(':').map(Number);
-    const r = real.split(':').map(Number);
-    const diff = (r[0] * 60 + r[1]) - (p[0] * 60 + p[1]);
-    if (diff > 10) return "<span class='atraso'>Atraso</span>";
-    if (diff < -10) return "<span class='adianto'>Adiantamento</span>";
-    return "<span class='ok'>OK</span>";
-}
-
-function save(id, field, val) {
-    const inputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
-    if (!inputs[id]) inputs[id] = { veiculo: '', real: '', obs: '' };
-    inputs[id][field] = val;
-    localStorage.setItem('gistUserInputs', JSON.stringify(inputs));
-    if (field === 'real') renderTable(allData);
-}
-
-function loadStoredData() {
-    const saved = localStorage.getItem('gistFileData');
-    if (saved) {
-        allData = JSON.parse(saved);
-        populateFilters(allData);
-        renderTable(allData);
-        document.getElementById('filter-section').style.display = 'flex';
+    function updateSelectedFiltersDisplay() {
+        selectedFiltersDisplay.innerHTML = '';
+        const createTags = (filterEl, label) => {
+            Array.from(filterEl.selectedOptions).forEach(opt => {
+                const tag = document.createElement('span');
+                tag.className = 'selected-line-tag';
+                tag.innerHTML = `${label}: ${opt.value} <span class="remove-tag">&times;</span>`;
+                tag.querySelector('.remove-tag').onclick = () => {
+                    opt.selected = false;
+                    filterEl.dispatchEvent(new Event('change'));
+                };
+                selectedFiltersDisplay.appendChild(tag);
+            });
+        };
+        createTags(linesFilter, 'L');
+        createTags(tableFilter, 'T');
+        createTags(postoFilter, 'P');
     }
-}
+
+    function renderTable(data) {
+        dataTableBody.innerHTML = '';
+        const selLines = Array.from(linesFilter.selectedOptions).map(o => o.value);
+        const selTables = Array.from(tableFilter.selectedOptions).map(o => o.value);
+        const selPostos = Array.from(postoFilter.selectedOptions).map(o => o.value);
+
+        const filtered = data.filter(item => {
+            return (selLines.length === 0 || selLines.includes(item.Linha)) &&
+                   (selTables.length === 0 || selTables.includes(item.Tabela)) &&
+                   (selPostos.length === 0 || selPostos.includes(item.PostoControle)) &&
+                   (!startTimeFilter.value || item.GOP_PDH_HORARIO_INICIO >= startTimeFilter.value) &&
+                   (!endTimeFilter.value || item.GOP_PDH_HORARIO_INICIO <= endTimeFilter.value) &&
+                   ['4', '7'].includes(item.TipoPassagem);
+        }).sort((a, b) => a.GOP_PDH_HORARIO_INICIO.localeCompare(b.GOP_PDH_HORARIO_INICIO));
+
+        const inputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
+        filtered.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            const val = inputs[item.id] || { veiculo: '', realTime: '' };
+            tr.innerHTML = `
+                <td>${item.Linha}</td><td>${item.Tabela}</td><td>${item.Empresa}</td>
+                <td>${item.TipoPassagem}</td><td>${item.PostoControle}</td>
+                <td>${item.GOP_PDH_HORARIO_INICIO} <span class="passed-time-dot" data-schedule-time="${item.GOP_PDH_HORARIO_INICIO}" data-item-id="${item.id}"></span><span id="lost-msg-${item.id}" class="lost-entry"></span></td>
+                <td><div class="input-group">
+                    <input type="text" maxlength="5" id="veiculo-${item.id}" value="${val.veiculo}" class="v-input">
+                    <input type="time" id="real-time-${item.id}" value="${val.realTime}" class="t-input">
+                </div></td>`;
+            dataTableBody.appendChild(tr);
+            
+            const vIn = tr.querySelector(`#veiculo-${item.id}`);
+            const rIn = tr.querySelector(`#real-time-${item.id}`);
+            
+            // Navegação com ENTER
+            vIn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    rIn.focus();
+                }
+            });
+
+            rIn.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // Procura o próximo input de veículo na tabela
+                    const nextRow = tr.nextElementSibling;
+                    if (nextRow) {
+                        const nextVIn = nextRow.querySelector('.v-input');
+                        if (nextVIn) nextVIn.focus();
+                    }
+                }
+            });
+
+            const updateRow = () => {
+                inputs[item.id] = { veiculo: vIn.value, realTime: rIn.value };
+                localStorage.setItem('gistUserInputs', JSON.stringify(inputs));
+                checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
+                updatePassedTimes();
+            };
+
+            vIn.oninput = rIn.onchange = updateRow;
+            if (val.realTime) checkTime(item.id, item.GOP_PDH_HORARIO_INICIO);
+        });
+        updatePassedTimes();
+    }
+
+    function saveFilterState() {
+        const state = {
+            lines: Array.from(linesFilter.selectedOptions).map(o => o.value),
+            tables: Array.from(tableFilter.selectedOptions).map(o => o.value),
+            postos: Array.from(postoFilter.selectedOptions).map(o => o.value),
+            start: startTimeFilter.value,
+            end: endTimeFilter.value
+        };
+        localStorage.setItem('gistFilterState', JSON.stringify(state));
+    }
+
+    function loadFilterState() {
+        const state = JSON.parse(localStorage.getItem('gistFilterState'));
+        if (!state) return;
+        const apply = (el, vals) => Array.from(el.options).forEach(o => o.selected = vals.includes(o.value));
+        apply(linesFilter, state.lines || []);
+        apply(tableFilter, state.tables || []);
+        apply(postoFilter, state.postos || []);
+        startTimeFilter.value = state.start || '';
+        endTimeFilter.value = state.end || '';
+    }
+
+    function updatePassedTimes() {
+        const now = new Date();
+        const cur = now.getHours() * 60 + now.getMinutes();
+        document.querySelectorAll('.passed-time-dot').forEach(dot => {
+            const itemId = dot.dataset.itemId;
+            const rIn = document.getElementById(`real-time-${itemId}`);
+            const [h, m] = dot.dataset.scheduleTime.split(':').map(Number);
+            const hasVal = rIn && rIn.value !== "";
+            dot.classList.toggle('visible', (h * 60 + m) < cur && !hasVal);
+        });
+    }
+
+    initializeApp();
+    if (updateInterval) clearInterval(updateInterval);
+    updateInterval = setInterval(updatePassedTimes, 30000);
+});
