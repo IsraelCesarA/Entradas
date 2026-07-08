@@ -1,61 +1,68 @@
-// 🚀 Carregar dados da API usando proxy seguro para contornar o bloqueio de HTTP
-async function carregarPostos() {
-    const corpoTabela = document.querySelector('#tabelaDados tbody');
-    corpoTabela.innerHTML = `<tr><td colspan="8" class="loading">Carregando dados dos postos...</td></tr>`;
+// 📦 Armazena a lista de postos para usar na tabela
+let listaPostos = [];
 
+// 🌗 Alternar Tema (mantém a lógica original da página)
+const themeToggle = document.getElementById('theme-toggle');
+themeToggle.addEventListener('click', () => {
+    document.body.classList.toggle('dark-mode');
+    themeToggle.textContent = document.body.classList.contains('dark-mode') 
+        ? 'Alternar Tema' 
+        : 'Alternar Tema';
+});
+
+// 🚀 Carrega dados da API com proxy seguro para resolver erro de acesso
+async function carregarDadosPostos() {
     try {
-        // Usamos um proxy HTTPS para acessar a API que só tem HTTP
-        const urlProxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('http://gistapis.etufor.ce.gov.br:8081/api/postoControle');
+        const urlApi = 'http://gistapis.etufor.ce.gov.br:8081/api/postoControle';
+        const urlProxy = 'https://corsproxy.io/?' + encodeURIComponent(urlApi);
 
         const resposta = await fetch(urlProxy);
-        
-        if (!resposta.ok) throw new Error(`Erro na requisição: ${resposta.status}`);
-        
-        const postos = await resposta.json();
-        corpoTabela.innerHTML = '';
+        if (!resposta.ok) throw new Error(`Falha ao carregar: ${resposta.status}`);
 
-        if (postos.length === 0) {
-            corpoTabela.innerHTML = `<tr><td colspan="8" class="erro">Nenhum posto encontrado.</td></tr>`;
-            return;
-        }
-
-        // Preenche a tabela com os dados
-        postos.forEach(posto => {
-            const linha = document.createElement('tr');
-            linha.innerHTML = `
-                <td>${posto.numero || '-'}</td>
-                <td><strong>${posto.nomeFantasia || '-'}</strong></td>
-                <td>${posto.nomeFantasia || '-'}</td>
-                <td>${posto.nome || '-'}</td>
-                <td>${posto.latitude ? posto.latitude.toFixed(6) : '-'}</td>
-                <td>${posto.longitude ? posto.longitude.toFixed(6) : '-'}</td>
-                <td>${posto.raio ? posto.raio + ' m' : '-'}</td>
-                <td><input type="text" class="obs-input" placeholder="Observações"></td>
-            `;
-            corpoTabela.appendChild(linha);
-        });
+        listaPostos = await resposta.json();
+        console.log('Postos carregados com sucesso:', listaPostos);
 
     } catch (erro) {
-        corpoTabela.innerHTML = `<tr><td colspan="8" class="erro">Erro ao carregar dados: ${erro.message}</td></tr>`;
-        console.error(erro);
+        console.error('Erro ao acessar API:', erro);
+        // Em caso de erro, mantém a estrutura e preenche com valor padrão
+        listaPostos = [];
     }
 }
 
-// 🌗 Alternar modo escuro/claro
-const botaoTema = document.getElementById('theme-toggle');
-botaoTema.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    botaoTema.textContent = document.body.classList.contains('dark-mode') 
-        ? 'Modo Claro' 
-        : 'Modo Escuro';
-});
+// 🔍 Função para buscar o nome do posto pelo número
+function obterNomePosto(numeroPosto) {
+    if (!listaPostos.length || !numeroPosto) return '-';
+    const posto = listaPostos.find(p => String(p.numero) === String(numeroPosto));
+    return posto ? posto.nomeFantasia : numeroPosto;
+}
 
-// 🧹 Limpar e recarregar dados
+// 📝 Exemplo de preenchimento da tabela com a coluna Posto
+// Essa função será chamada ao carregar o arquivo ou gerar os dados
+function preencherLinhaTabela(linhaDados) {
+    const corpoTabela = document.querySelector('#tabelaPrincipal tbody');
+    const tr = document.createElement('tr');
+
+    tr.innerHTML = `
+        <td>${linhaDados.linha || '-'}</td>
+        <td>${linhaDados.tabela || '-'}</td>
+        <td>${linhaDados.empresa || '-'}</td>
+        <td>${linhaDados.passagem || '-'}</td>
+        <td>${obterNomePosto(linhaDados.posto)}</td> <!-- Coluna Posto com nome -->
+        <td>${linhaDados.inicio || '-'}</td>
+        <td>${linhaDados.horarioReal || '-'}</td>
+        <td><input type="text" class="obs-input" placeholder="Observações"></td>
+    `;
+
+    corpoTabela.appendChild(tr);
+}
+
+// 🧹 Limpar dados
 document.getElementById('clear-data-button').addEventListener('click', () => {
-    if (confirm('Tem certeza que deseja recarregar os dados?')) {
-        carregarPostos();
+    if (confirm('Deseja limpar todos os dados?')) {
+        document.querySelector('#tabelaPrincipal tbody').innerHTML = 
+            `<tr><td colspan="8" class="info-centro">Carregue um arquivo para começar.</td></tr>`;
     }
 });
 
-// 📋 Carregar dados ao abrir a página
-window.addEventListener('load', carregarPostos);
+// ⏳ Inicia carregamento dos postos quando a página abre
+window.addEventListener('load', carregarDadosPostos);
