@@ -1,10 +1,13 @@
-// 🚀 Carregar dados da API
+// 🚀 Carregar dados da API usando proxy seguro para contornar o bloqueio de HTTP
 async function carregarPostos() {
     const corpoTabela = document.querySelector('#tabelaDados tbody');
     corpoTabela.innerHTML = `<tr><td colspan="8" class="loading">Carregando dados dos postos...</td></tr>`;
 
     try {
-        const resposta = await fetch('http://gistapis.etufor.ce.gov.br:8081/api/postoControle');
+        // Usamos um proxy HTTPS para acessar a API que só tem HTTP
+        const urlProxy = 'https://api.allorigins.win/raw?url=' + encodeURIComponent('http://gistapis.etufor.ce.gov.br:8081/api/postoControle');
+
+        const resposta = await fetch(urlProxy);
         
         if (!resposta.ok) throw new Error(`Erro na requisição: ${resposta.status}`);
         
@@ -47,9 +50,9 @@ botaoTema.addEventListener('click', () => {
         : 'Modo Escuro';
 });
 
-// 🧹 Limpar dados
+// 🧹 Limpar e recarregar dados
 document.getElementById('clear-data-button').addEventListener('click', () => {
-    if (confirm('Tem certeza que deseja limpar todos os dados?')) {
+    if (confirm('Tem certeza que deseja recarregar os dados?')) {
         carregarPostos();
     }
 });
