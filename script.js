@@ -25,6 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let updateInterval;
     let nomesPostos = JSON.parse(localStorage.getItem('gistNomesPostos')) || {};
 
+    // Controle de ordenação
+    let sortColumn = 'GOP_PDH_HORARIO_INICIO';
+    let sortAsc = true;
+
     // Botão de Carregar Postos (Consulta API via Proxy)
     loadPostosButton.addEventListener('click', async () => {
         const originalText = loadPostosButton.innerText;
@@ -119,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('landscape'); // Usar paisagem para caber mais colunas
+        const doc = new jsPDF('landscape');
 
         const columns = ["Linha", "Tabela", "Empresa", "Passagem", "Posto", "Início", "Veículo", "Horário Real", "Observações"];
         const rows = data.map(item => [
@@ -173,6 +177,33 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         reader.readAsArrayBuffer(file);
     });
+
+    // Função de ordenação dos dados
+    function sortData(data) {
+        return [...data].sort((a, b) => {
+            let valA, valB;
+            
+            if (sortColumn === 'Linha') {
+                valA = String(a.Linha);
+                valB = String(b.Linha);
+                return sortAsc ? valA.localeCompare(valB, undefined, {numeric: true}) 
+                               : valB.localeCompare(valA, undefined, {numeric: true});
+            } 
+            else if (sortColumn === 'PostoControle') {
+                valA = String(a.PostoControle);
+                valB = String(b.PostoControle);
+                return sortAsc ? valA.localeCompare(valB, undefined, {numeric: true}) 
+                               : valB.localeCompare(valA, undefined, {numeric: true});
+            }
+            else if (sortColumn === 'GOP_PDH_HORARIO_INICIO') {
+                valA = String(a.GOP_PDH_HORARIO_INICIO);
+                valB = String(b.GOP_PDH_HORARIO_INICIO);
+                return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            }
+            
+            return 0;
+        });
+    }
 
     function checkTime(itemId, scheduledTimeStr) {
         const realTimeInput = document.getElementById(`real-time-${itemId}`);
@@ -281,16 +312,48 @@ document.addEventListener('DOMContentLoaded', () => {
     startTimeFilter.addEventListener('input', () => { renderTable(allData); saveFilterState(); });
     endTimeFilter.addEventListener('input', () => { renderTable(allData); saveFilterState(); });
 
+    // Evento de ordenação nos cabeçalhos
+    document.querySelectorAll('.sortable-header').forEach(header => {
+        header.addEventListener('click', () => {
+            const col = header.dataset.sort;
+            sortColumn === col ? sortAsc = !sortAsc : sortAsc = true;
+            sortColumn = col;
+            
+            document.querySelectorAll('.sort-indicator').forEach(ind => ind.textContent = '');
+            header.querySelector('.sort-indicator').textContent = sortAsc ? ' ↑' : ' ↓';
+            
+            renderTable(allData);
+        });
+    });
+
     themeToggleButton.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
     });
 
+    // Botão Limpar Dados - CORRIGIDO para limpeza total
     clearDataButton.addEventListener('click', () => {
-        if (confirm('Limpar todos os dados?')) {
+        if (confirm('Limpar TODOS os dados, filtros, nomes de postos e anotações salvas?')) {
             localStorage.removeItem('gistFileData');
             localStorage.removeItem('gistUserInputs');
-            window.location.reload();
+            localStorage.removeItem('gistFilterState');
+            localStorage.removeItem('gistNomesPostos');
+            
+            allData = [];
+            nomesPostos = {};
+            
+            dataTableBody.innerHTML = '';
+            selectedFiltersDisplay.innerHTML = '';
+            filterSection.style.display = 'none';
+            fileInput.value = '';
+            
+            linesFilter.innerHTML = '';
+            tableFilter.innerHTML = '';
+            postoFilter.innerHTML = '';
+            startTimeFilter.value = '';
+            endTimeFilter.value = '';
+            
+            alert('Todos os dados foram removidos completamente!');
         }
     });
 
@@ -326,11 +389,12 @@ document.addEventListener('DOMContentLoaded', () => {
                    (!startTimeFilter.value || item.GOP_PDH_HORARIO_INICIO >= startTimeFilter.value) &&
                    (!endTimeFilter.value || item.GOP_PDH_HORARIO_INICIO <= endTimeFilter.value) &&
                    ['4', '7'].includes(item.TipoPassagem);
-        }).sort((a, b) => a.GOP_PDH_HORARIO_INICIO.localeCompare(b.GOP_PDH_HORARIO_INICIO));
+        });
 
+        const sortedData = sortData(filtered);
         const inputs = JSON.parse(localStorage.getItem('gistUserInputs')) || {};
         
-        filtered.forEach((item) => {
+        sortedData.forEach((item) => {
             const tr = document.createElement('tr');
             const val = inputs[item.id] || { veiculo: '', realTime: '', observacao: '' };
             
